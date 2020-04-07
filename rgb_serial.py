@@ -2,7 +2,7 @@ import serial
 import serial.tools.list_ports
 from time import sleep
 
-import SystemInfo
+import hardware_monitor
 
 
 # You must change this for your Arduino VID:PID!!
@@ -32,7 +32,7 @@ def select_color(temp):
         return ELECTRIC_BLUE
 
 # Get the GPU's temperature sensor
-system = SystemInfo.SystemInfo()
+system = hardware_monitor.SystemInfo()
 graphic_temp_sensor = None
 graphic_load_sensor = None
 
