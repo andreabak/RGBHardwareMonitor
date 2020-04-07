@@ -1,7 +1,7 @@
 #include <Adafruit_NeoPixel.h>
 
-#define stripPIN  2
-#define numLEDS   8
+#define stripPIN  3
+#define numLEDS   4
 
 #define NORMAL 0
 #define THEATER_CHASE 1
@@ -13,9 +13,9 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(numLEDS, stripPIN, NEO_GRB + NEO_KHZ
 
 int obtenerNumero(){
     int numero=0;
-    
+
     numero=Serial.parseInt();
-    
+
     return numero;
 }
 
@@ -92,20 +92,20 @@ void breathing(int R, int G, int B, uint8_t wait){
     int limit=max(R,max(G,B));
     for(int j=0; j<limit; j=j++){
       if(nr<R)
-          nr+=2;       
+          nr+=2;
 
       if(ng<G)
           ng+=2;
 
       if(nb<B)
           nb+=2;
-                    
+
       if(nr>R)
           nr=R;
-          
+
       if(ng>G)
           ng=G;
-          
+
       if(nb>B)
           nb=B;
 
@@ -128,11 +128,11 @@ void breathing(int R, int G, int B, uint8_t wait){
           nb-=2;
       if(nb<0)
           nb=0;
-          
+
       for(int i=0; i< strip.numPixels(); i++) {
           colorWipe(strip.Color(nr,ng,nb),wait);
       }
-      
+
       if(nr==0 && ng==0 && nb==0)
           break;
     }
@@ -144,7 +144,7 @@ void procesacomando(){
    modo=obtenerNumero();
    /*Serial.print("modo: ");
    Serial.println(modo);*/
-        
+
     for(int i=0; i<3; i++){
         color[i]=obtenerNumero();
         /*Serial.print("Color ");
@@ -154,7 +154,7 @@ void procesacomando(){
         if(color[i]>255)
             color[i]=255;
     }
-      
+
     switch(modo){
         case NORMAL:{
             colorWipe(strip.Color(color[0],color[1],color[2]),0);
@@ -162,7 +162,7 @@ void procesacomando(){
             Serial.print(0);
             break;
         }
-            
+
         case THEATER_CHASE:{
             theaterChase(strip.Color(color[0],color[1],color[2]),100);
             Serial.flush();
@@ -204,7 +204,7 @@ bool unattended;
 unsigned long tiempo=0;
 
 void setup() {
-    Serial.begin(9600); // start serial for output 
+    Serial.begin(115200); // start serial for output
     while(!Serial);
     Serial.flush();
     Serial.setTimeout(200);
