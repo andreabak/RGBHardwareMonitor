@@ -164,6 +164,9 @@ class SystemInfo:
     mainboard: Optional[Union[Device, List[Device]]] = None
     """Mainboard of the computer"""
 
+    superio: Optional[Union[Device, List[Device]]] = None
+    """SuperIO controller(s) of the computer"""
+
     cpu: Optional[Union[Device, List[Device]]] = None
     """Processor(s) of the computer"""
 
@@ -183,6 +186,7 @@ class SystemInfo:
         self.os_name = WMI().Win32_OperatingSystem()[0].Caption
         self.os_architecture = WMI().Win32_OperatingSystem()[0].OSArchitecture
         self.mainboard = self.add_device(wmi_ohm.Hardware(HardwareType="Mainboard"))
+        self.superio = self.add_device(wmi_ohm.Hardware(HardwareType="SuperIO"))
         self.cpu = self.add_device(wmi_ohm.Hardware(HardwareType="CPU"))
         self.ram = self.add_device(wmi_ohm.Hardware(HardwareType="RAM"))
         self.hdd = self.add_device(wmi_ohm.Hardware(HardwareType="HDD"))
@@ -211,7 +215,7 @@ class SystemInfo:
 
     def print_devices(self):
         """Function for print devices info"""
-        for device_list in (self.mainboard, self.cpu, self.ram, self.gpu, self.hdd):
+        for device_list in (self.mainboard, self.superio, self.cpu, self.ram, self.gpu, self.hdd):
             if isinstance(device_list, list):
                 for device in device_list:
                     print(device.get_info())
