@@ -10,7 +10,7 @@ from hardware_monitor import SystemInfo, Sensor
 
 # TODO: Move these to a config
 # You must change this for your Arduino VID:PID!!
-ARDUINO_ID = "2341:8036"
+ARDUINO_ID = "1A86:7523"
 
 RAW_MIN = 0
 RAW_MAX = 255
@@ -67,18 +67,20 @@ class RingLightSpec:
 
 
 # TODO: Implement config and load these constants
-ring1 = RingLightSpec(
-    id=1, name='CPU',
-    temp_sensor=SensorSpec('cpu', dict(sensor_type='Temperature'), min=35.0, max=95.0),
-    load_sensor=SensorSpec('cpu', dict(sensor_type='Load', name='CPU Total')),
-    fan_sensor=SensorSpec('superio', dict(sensor_type='Control', name='Fan Control #2'))
-)
-ring2 = RingLightSpec(
-    id=2, name='GPU',
-    temp_sensor=SensorSpec('gpu', dict(sensor_type='Temperature'), min=35.0, max=85.0),
-    load_sensor=SensorSpec('gpu', dict(sensor_type='Load', name='GPU Core')),
-    fan_sensor=SensorSpec('gpu', dict(sensor_type='Control', name='GPU Fan'))
-)
+rings = [
+    RingLightSpec(
+        id=1, name='CPU',
+        temp_sensor=SensorSpec('cpu', dict(sensor_type='Temperature'), min=35.0, max=85.0),
+        load_sensor=SensorSpec('cpu', dict(sensor_type='Load', name='CPU Total')),
+        fan_sensor=SensorSpec('superio', dict(sensor_type='Control', name='Fan Control #2'))
+    ),
+    RingLightSpec(
+        id=2, name='GPU',
+        temp_sensor=SensorSpec('gpu', dict(sensor_type='Temperature'), min=35.0, max=85.0),
+        load_sensor=SensorSpec('gpu', dict(sensor_type='Load', name='GPU Core')),
+        fan_sensor=SensorSpec('gpu', dict(sensor_type='Control', name='GPU Fan'))
+    )
+]
 
 # Get the Arduino port
 arduino_list = serial.tools.list_ports.grep(ARDUINO_ID)
@@ -89,7 +91,7 @@ for device in arduino_list:
 else:
     raise ConnectionError(f'Arduino serial port not found for specified VID:CID = {ARDUINO_ID}')
 
-ser = serial.Serial(arduino_port, 115200)
+ser = serial.Serial(arduino_port, 115200, timeout=5)
 
 
 # TODO: Repackage to a main module
@@ -97,10 +99,11 @@ ser = serial.Serial(arduino_port, 115200)
 def main():
     try:
         while True:
-            command = ring1.prepare_command()
-            ser.write(command.encode('UTF-8'))
-            print(f'Received: {ser.read_until().decode().strip()}\n')
-            sleep(2)
+            for ring in rings:
+                command = ring.prepare_command()
+                ser.write(command.encode('UTF-8'))
+                print(f'Received: {ser.read_until().decode().strip()}\n')
+                sleep(1)
     except KeyboardInterrupt:  # TODO: Catch serial errors, attempt reconnect?
         print("Exit!")
         ser.close()
