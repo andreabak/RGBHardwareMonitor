@@ -29,11 +29,11 @@ The _hardware_monitor_ module will allow you to get in Python information about 
 
 **Attributes:**
 
-* **Name** *string*
-* **Identifier** *string*
-* **HardwareType** *string*
-* **Parent** *string*
-* **Sensors** *list(Sensor)*
+* **name** *string*
+* **identifier** *string*
+* **hardware_type** *string*
+* **parent** *string*
+* **sensors** *list(Sensor)*
 
 
 **Sensor class:**
