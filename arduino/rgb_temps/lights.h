@@ -73,6 +73,9 @@ class Color {
 };
 
 
+// TODO: Add more light effects
+// TODO: Add idle effect mode (like rainbow, when load & temp < threshold%)
+
 class RingLights {
     private:
         uint16_t stripPin, numLEDs;

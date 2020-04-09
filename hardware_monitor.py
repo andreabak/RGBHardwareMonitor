@@ -229,5 +229,7 @@ class SystemInfo:
         self.print_devices()
 
 
+# TODO: Auto-loading OpenHardwareMonitor if not running
+
 if __name__ == '__main__':
     SystemInfo().print_info()

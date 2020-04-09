@@ -7,12 +7,15 @@ from serial.tools import list_ports
 
 from hardware_monitor import SystemInfo, Sensor
 
+
+# TODO: Move these to a config
 # You must change this for your Arduino VID:PID!!
 ARDUINO_ID = "2341:8036"
 
-
 RAW_MIN = 0
 RAW_MAX = 255
+
+
 system = SystemInfo()
 
 
@@ -63,6 +66,7 @@ class RingLightSpec:
         return command
 
 
+# TODO: Implement config and load these constants
 ring1 = RingLightSpec(
     id=1, name='CPU',
     temp_sensor=SensorSpec('cpu', dict(sensor_type='Temperature'), min=35.0, max=95.0),
@@ -88,6 +92,8 @@ else:
 ser = serial.Serial(arduino_port, 115200)
 
 
+# TODO: Repackage to a main module
+# TODO: Consider implementing a minimal GUI / Tray icon?
 def main():
     try:
         while True:
@@ -95,7 +101,7 @@ def main():
             ser.write(command.encode('UTF-8'))
             print(f'Received: {ser.read_until().decode().strip()}\n')
             sleep(2)
-    except KeyboardInterrupt:
+    except KeyboardInterrupt:  # TODO: Catch serial errors, attempt reconnect?
         print("Exit!")
         ser.close()
 

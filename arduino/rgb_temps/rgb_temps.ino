@@ -5,6 +5,7 @@
 /* ------------------------------- CONSTANTS ------------------------------- */
 
 
+// TODO: Consider allowing to set these parameters directly from python config
 const uint8_t ringsCount = 1;
 RingLights* rings[ringsCount];
 
