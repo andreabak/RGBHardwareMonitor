@@ -10,9 +10,10 @@
 
 #define RING_BASE_COLOR         0.0,   0.0,   0.0
 #define RING_COOL_COLOR         0.0,  95.0, 127.0
-#define RING_HOT_COLOR        191.0,  31.0,   0.0
+#define RING_HOT_COLOR        191.0,   0.0,   0.0
+#define RINGFLAME_IDLE_COLOR  255.0, 255.0, 255.0
 #define RINGFLAME_COOL_COLOR    0.0,   0.0, 255.0
-#define RINGFLAME_HOT_COLOR   255.0, 127.0,   0.0
+#define RINGFLAME_HOT_COLOR   255.0, 191.0,   0.0
 #define SETTING_SMOOTHING        64
 #define INITIAL_VALUES          0.5
 
@@ -24,6 +25,14 @@
 float randFloat();
 
 float mixValues(float firstValue, float secondValue, float strength);
+
+float fract(float x);
+
+float mix(float a, float b, float t);
+
+float step(float e, float x);
+
+float* hsv2rgb(float h, float s, float b, float* rgb);
 
 class Color {
     public:
@@ -70,6 +79,13 @@ class Color {
         void mixWith(Color& secondColor, float strength) {
             setMixed(*this, secondColor, strength);
         }
+        static Color fromHSV(float h, float s, float v) {
+            float rgb[3];
+            hsv2rgb(h, s, v, rgb);
+            rgb[0] *= 255.0; rgb[1] *= 255.0; rgb[2] *= 255.0;
+            Color newColor = Color(rgb[0], rgb[1], rgb[2]);
+            return newColor;
+        }
 };
 
 
@@ -81,7 +97,19 @@ class RingLights {
         uint16_t stripPin, numLEDs;
         Adafruit_NeoPixel* strip;
 
+        // Update Context
+        float invSmooth = 1.0 / SETTING_SMOOTHING;
+        float invHeat = 1.0 - INITIAL_VALUES;
+        float invLoad = 1.0 - INITIAL_VALUES;
+        float invRpm = 1.0 - INITIAL_VALUES;
+        float rotation = 0.0;
+        float entropy = 0.0;
+        float fade = 0.0;
+        float idleMix = 1.0;
+
         void mixFlame(Color& outColor, float flameForce, float heat, float dim=1.0);
+        void mixIdle(Color& outColor, float pos, float offset, float mixStrength);
+        void updateContext();
 
     public:
         Color* ringPixels;
@@ -90,6 +118,7 @@ class RingLights {
         Color ringCoolColor = Color(RING_COOL_COLOR);
         Color ringHotColor  = Color(RING_HOT_COLOR);
         float* ringFlameForce;
+        Color ringFlameIdleColor = Color(RINGFLAME_IDLE_COLOR);
         Color ringFlameCoolColor = Color(RINGFLAME_COOL_COLOR);
         Color ringFlameHotColor  = Color(RINGFLAME_HOT_COLOR);
         float ringBrightness = 1.0;

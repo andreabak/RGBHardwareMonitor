@@ -6,11 +6,12 @@
 
 
 // TODO: Consider allowing to set these parameters directly from python config
-const uint8_t ringsCount = 1;
+const uint8_t ringsCount = 2;
 RingLights* rings[ringsCount];
 
 void setupRings() {
-    rings[0] = new RingLights(3, 16, DEFAULT_STRIP_TYPE);
+    rings[0] = new RingLights(2, 16, DEFAULT_STRIP_TYPE);
+    rings[1] = new RingLights(4, 13, DEFAULT_STRIP_TYPE);
 }
 
 
@@ -28,6 +29,7 @@ void setup() {
     setupRings();
 }
 
+// TODO: Fix Serial connect crash/reset
 void loop() {  // TODO: Implement commands to set custom colors, then save in Flash/EEPROM
     if (Serial.available()) {  // TODO: Validate input
         uint8_t rawMode = Serial.parseInt();
@@ -36,11 +38,14 @@ void loop() {  // TODO: Implement commands to set custom colors, then save in Fl
             mode = rawMode;
             uint8_t ringId = Serial.parseInt();
             if (!ringId || ringId > ringsCount) {
-                Serial.print("Invalid ring id"); Serial.println(ringId);
+                Serial.print("Invalid ring id: "); Serial.println(ringId);
             } else {
-                float inHeat = Serial.parseInt() / 255.0;
-                float inLoad = Serial.parseInt() / 255.0;
-                float inRpm  = Serial.parseInt() / 255.0;
+                uint8_t rawHeat = Serial.parseInt();
+                uint8_t rawLoad = Serial.parseInt();
+                uint8_t rawRpm = Serial.parseInt();
+                float inHeat = max(0.0, min(1.0, (rawHeat / 255.0)));
+                float inLoad = max(0.0, min(1.0, (rawLoad / 255.0)));
+                float inRpm  = max(0.0, min(1.0, (rawRpm / 255.0)));
                 Serial.print("Parsed input (mode: "); Serial.print(mode);
                             Serial.print(", ring: "); Serial.print(ringId);
                             Serial.print(", heat: "); Serial.print(inHeat);
@@ -50,6 +55,7 @@ void loop() {  // TODO: Implement commands to set custom colors, then save in Fl
             }
             Serial.setTimeout(readDelay);
         }
+        Serial.flush();
     }
     for (uint8_t i=0; i<ringsCount; i++)
         rings[i]->loopStep();
