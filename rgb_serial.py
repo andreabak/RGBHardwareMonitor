@@ -91,7 +91,27 @@ for device in arduino_list:
 else:
     raise ConnectionError(f'Arduino serial port not found for specified VID:CID = {ARDUINO_ID}')
 
-ser = serial.Serial(arduino_port, 115200, timeout=5)
+serial_timeout = 3
+
+ser = serial.Serial(arduino_port, 115200, timeout=serial_timeout)
+
+
+def read_serial(until=serial.LF):
+    if until is None:
+        buffer = ser.read_all()
+    else:
+        buffer = ser.read_until(terminator=until)
+    return buffer.decode().strip()
+
+
+def print_serial(*args, **kwargs):  # TODO: Implement logging
+    print(f'Received: {read_serial(*args, **kwargs)}')
+
+
+def flush_serial():
+    if ser.in_waiting:
+        print_serial(until=None)
+    ser.flush()
 
 
 # TODO: Repackage to a main module
@@ -102,8 +122,10 @@ def main():
             for ring in rings:
                 command = ring.prepare_command()
                 ser.write(command.encode('UTF-8'))
-                print(f'Received: {ser.read_until().decode().strip()}\n')
+                print_serial()
+                flush_serial()
                 sleep(1)
+            print()
     except KeyboardInterrupt:  # TODO: Catch serial errors, attempt reconnect?
         print("Exit!")
         ser.close()

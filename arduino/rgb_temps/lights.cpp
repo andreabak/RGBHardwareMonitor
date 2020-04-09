@@ -52,14 +52,19 @@ void RingLights::initRing() {
 
 void RingLights::mixFlame(Color& outColor, float flameForce, float heat, float dim=1.0) {  // flameForce 0.0-200.0
 //    heat = 0.5 + 0.3398 * atan(20.0 * (heat - 0.5));
+    if (!flameForce)
+        return;
     flameForce = dim * (0.5 + 0.5 * heat) * (100.0 - abs(flameForce - 100.0)) / 100.0;
     Color flameColor = Color::fromMix(ringFlameCoolColor, ringFlameHotColor, heat);
-    flameColor.mixWith(ringFlameIdleColor, idleMix);
+    if (idleMix)
+        flameColor.mixWith(ringFlameIdleColor, idleMix);
     outColor.mixWith(flameColor, flameForce);
 }
 
 // TODO: Consider making this function signature a generic interface for more effects (per pixel calculation?)
 void RingLights::mixIdle(Color& outColor, float pos, float offset, float mixStrength=1.0) {
+    if (!idleMix || !mixStrength)
+        return;
     Color idleColor = Color::fromHSV(fmod((pos + offset) / numLEDs, 1.0), 1.0, max(0.33, min(1.0, load*2)));
     outColor.mixWith(idleColor, idleMix * mixStrength);
 }
@@ -69,11 +74,16 @@ void RingLights::displayRing() {
         float oi = i + ringOffset;
         float pixOffset = oi - int(oi);
         uint16_t srcPix0 = uint16_t(oi) % numLEDs;
-        uint16_t srcPix1 = (uint16_t(oi)+1) % numLEDs;
-        Color mix = Color::fromMix(ringPixels[srcPix0], ringPixels[srcPix1], pixOffset);
+        Color mix = Color(ringPixels[srcPix0]);
+        if (pixOffset) {
+            uint16_t srcPix1 = (uint16_t(oi)+1) % numLEDs;
+            mix.mixWith(ringPixels[srcPix1], pixOffset);
+        }
         mixIdle(mix, i, ringOffset * 0.5);
-        mixFlame(mix, ringFlameForce[i], heat, 1.0 - (0.5 * randFloat() * load*load));
-        mix *= ringBrightness;
+        if (ringFlameForce[i]) 
+            mixFlame(mix, ringFlameForce[i], heat, 1.0 - (0.5 * randFloat() * load*load));
+        if (ringBrightness != 1.0)
+            mix *= ringBrightness;
         uint8_t r = max(0.0, min(255.0, mix.r));  // perceived brightness is ca. logarithmic
         uint8_t g = max(0.0, min(255.0, mix.g));
         uint8_t b = max(0.0, min(255.0, mix.b));
@@ -88,12 +98,13 @@ void RingLights::updateContext() {
     load = mixValues(load, settingLoad, invSmooth);
     rpm = mixValues(rpm, settingRpm, invSmooth);
     
-    invLoad = 1.0 - load;
     invHeat = 1.0 - heat;
+    invLoad = 1.0 - load;
+    invRpm = 1.0 - rpm;
     rotation = 0.75 * rpm * (1.0 - 0.5 * invLoad*invLoad);
     entropy = 99000 * load * load;
     fade = 0.5 * (0.25 + 0.75 * heat) * (0.5 + 0.5 * load);
-    idleMix = max(0.0, min(1.0, 2.0 * (0.5 - (1.0 - invLoad * invHeat))));
+    idleMix = max(0.0, min(1.0, invLoad - 3 * heat));
 }
 
 void RingLights::updateRing() {  // float values range 0.0-1.0
@@ -111,8 +122,10 @@ void RingLights::updateRing() {  // float values range 0.0-1.0
     for (uint16_t i=0; i<numLEDs; i++) {
         Color mix = Color(ringHeatMix);
         float baseDim = abs(((int(i) % period) - (period / 2)) / float(period / 2));
-        baseDim *= (1.0 - 0.125 * randFloat());
-        mix.mixWith(ringBaseColor, baseDim);
+        if (baseDim) {
+            baseDim *= (1.0 - 0.125 * randFloat());
+            mix.mixWith(ringBaseColor, baseDim);
+        }
         float iFade = 2 * fade * (0.75 - 0.5 * baseDim);
         ringPixels[i].mixWith(mix, iFade);
     }
