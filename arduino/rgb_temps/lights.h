@@ -1,5 +1,6 @@
 #include <math.h>
 #include <Adafruit_NeoPixel.h>
+#include "fast_hsv2rgb.h"
 
 
 
@@ -25,14 +26,6 @@
 float randFloat();
 
 float mixValues(float firstValue, float secondValue, float strength);
-
-float fract(float x);
-
-float mix(float a, float b, float t);
-
-float step(float e, float x);
-
-float* hsv2rgb(float h, float s, float b, float* rgb);
 
 class Color {
     public:
@@ -79,12 +72,12 @@ class Color {
         void mixWith(Color& secondColor, float strength) {
             setMixed(*this, secondColor, strength);
         }
-        static Color fromHSV(float h, float s, float v) {
-            float rgb[3];
-            hsv2rgb(h, s, v, rgb);
-            rgb[0] *= 255.0; rgb[1] *= 255.0; rgb[2] *= 255.0;
-            Color newColor = Color(rgb[0], rgb[1], rgb[2]);
-            return newColor;
+        static Color fromHSV(float _h, float _s, float _v) {
+            uint16_t h = _h * HSV_HUE_MAX;
+            uint8_t s = _s * HSV_SAT_MAX, v = _v * HSV_VAL_MAX;
+            uint8_t r, g, b;
+            fast_hsv2rgb_32bit(h, s, v, &r, &g, &b);
+            return Color(r, g, b);
         }
 };
 
