@@ -66,7 +66,7 @@ void RingLights::displayRing() {
             uint16_t srcPix1 = (uint16_t(oi)+1) % numLEDs;
             mix.mixWith(ringPixels[srcPix1], pixOffset);
         }
-        mixIdle(mix, i, ringOffset * 0.5);
+        mixIdle(mix, i, ringOffset * (1.0 / idleSlowdown));
         if (ringFlameForce[i]) 
             mixFlame(mix, ringFlameForce[i], heat, 1.0 - (0.5 * randFloat() * load*load));
         if (ringBrightness != 1.0)
@@ -88,20 +88,20 @@ void RingLights::updateContext() {
     invHeat = 1.0 - heat;
     invLoad = 1.0 - load;
     invRpm = 1.0 - rpm;
-    rotation = 0.75 * rpm * (1.0 - 0.5 * invLoad*invLoad);
-    entropy = 99000 * load * load;
+    rotation = (25.0 / fpsAvg) * rpm * (1.0 - 0.5 * invLoad*invLoad);
+    entropy = 99000 * load*load;
     fade = 0.5 * (0.25 + 0.75 * heat) * (0.5 + 0.5 * load);
-    idleMix = max(0.0, min(1.0, invLoad - 3 * heat));
+    idleMix = max(0.0, min(1.0, (1.0 - load*load) - 3.0 * heat));
 }
 
 void RingLights::updateRing() {  // float values range 0.0-1.0
     updateContext();
   
     ringOffset -= rotation;
-    if (ringOffset >= numLEDs * 10.0)
-        ringOffset -= numLEDs * 10.0;
+    if (ringOffset >= numLEDs * idleSlowdown)
+        ringOffset -= numLEDs * idleSlowdown;
     else if (ringOffset < 0)
-        ringOffset += numLEDs * 10.0;
+        ringOffset += numLEDs * idleSlowdown;
         
     int period = max(8, min(32, numLEDs)) / 2;  // TODO: Apply max 32 somewhere on the divisor so to obtain semi-fixed-length repeat
     Color ringHeatMix = Color::fromMix(ringCoolColor, ringHotColor, heat);
@@ -139,6 +139,10 @@ void RingLights::setSensors(float _heat, float _load, float _rpm) {
     settingHeat = _heat;
     settingLoad = _load;
     settingRpm = _rpm;
+}
+
+void RingLights::setFps(float _fps) {
+    fpsAvg = _fps;
 }
 
 void RingLights::loopStep() {

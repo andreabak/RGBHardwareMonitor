@@ -98,7 +98,9 @@ class RingLights {
         float rotation = 0.0;
         float entropy = 0.0;
         float fade = 0.0;
-        float idleMix = 1.0;
+        float idleMix = 0.0;
+        const uint8_t idleSlowdown = 4;
+        float fpsAvg = 30.0;
 
         void mixFlame(Color& outColor, float flameForce, float heat, float dim=1.0);
         void mixIdle(Color& outColor, float pos, float offset, float mixStrength);
@@ -126,6 +128,7 @@ class RingLights {
         void displayRing();
         void updateRing();
         void setSensors(float _heat, float _load, float _rpm);
+        void setFps(float _fps);
         void loopStep();
 };
 

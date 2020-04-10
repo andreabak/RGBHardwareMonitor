@@ -22,8 +22,7 @@ void setupRings() {
 uint8_t mode = 1;
 const unsigned int readDelay = 1;
 
-// TODO: Skip fps and print(s) when not debugging
-unsigned int lastus = micros();
+unsigned long lastus = micros();
 float fps = 0.0;
 float fpsAvg = 0.0;
 const float fpsAvgSamples = 300.0;
@@ -65,10 +64,16 @@ void loop() {  // TODO: Implement commands to set custom colors, then save in Fl
         }
         Serial.flush();
     }
-    for (uint8_t i=0; i<ringsCount; i++)
+    for (uint8_t i=0; i<ringsCount; i++) {
         rings[i]->loopStep();
-    unsigned int currus = micros();
+        if (fpsAvg)
+            rings[i]->setFps(fpsAvg);
+    }
+    unsigned long currus = micros();
     fps = 1000000.0 / (currus - lastus);
-    fpsAvg = mixValues(fpsAvg, fps, 1.0 / fpsAvgSamples);
+    if (!fpsAvg)
+        fpsAvg = fps;
+    else
+        fpsAvg = mixValues(fpsAvg, fps, 1.0 / fpsAvgSamples);
     lastus = currus;
 }
