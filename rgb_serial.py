@@ -62,7 +62,7 @@ class RingLightSpec:
               f"Temp: {self.temp_sensor.value:.2f}°C, "
               f"Load: {self.load_sensor.value:.2f}%, "
               f"Fan: {self.fan_sensor.value:.2f}%")
-        command = f'1 {self.id} {self.temp_sensor.raw_value} {self.load_sensor.raw_value} {self.fan_sensor.raw_value}\n'
+        command = f'U {self.id} {self.temp_sensor.raw_value} {self.load_sensor.raw_value} {self.fan_sensor.raw_value}\n'
         return command
 
 
@@ -94,6 +94,8 @@ else:
 serial_timeout = 3
 
 ser = serial.Serial(arduino_port, 115200, timeout=serial_timeout)
+print('Connected to serial port, waiting for arduino to reset')
+sleep(4)  # Wait for arduino reset on serial connection
 
 
 def read_serial(until=serial.LF):
@@ -105,7 +107,9 @@ def read_serial(until=serial.LF):
 
 
 def print_serial(*args, **kwargs):  # TODO: Implement logging
-    print(f'Received: {read_serial(*args, **kwargs)}')
+    buffer = read_serial(*args, **kwargs)
+    if buffer:
+        print(f'Received: {buffer}')
 
 
 def flush_serial():
@@ -122,9 +126,9 @@ def main():
             for ring in rings:
                 command = ring.prepare_command()
                 ser.write(command.encode('UTF-8'))
-                print_serial()
+                sleep(0.5)  # Wait for reply
                 flush_serial()
-                sleep(1)
+                sleep(0.5)
             print()
     except KeyboardInterrupt:  # TODO: Catch serial errors, attempt reconnect?
         print("Exit!")
