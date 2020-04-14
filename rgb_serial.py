@@ -1,6 +1,6 @@
 from time import sleep
 from dataclasses import dataclass
-from typing import Mapping
+from typing import Mapping, ClassVar, List, Optional
 
 import serial
 from serial.tools import list_ports
@@ -8,15 +8,10 @@ from serial.tools import list_ports
 from hardware_monitor import SystemInfo, Sensor
 
 
-# TODO: Move these to a config
-# You must change this for your Arduino VID:PID!!
-ARDUINO_ID = "1A86:7523"
+arduino_id = None
 
 RAW_MIN = 0
 RAW_MAX = 255
-
-
-system = SystemInfo()
 
 
 @dataclass
@@ -28,8 +23,12 @@ class SensorSpec:
 
     sensor: Sensor = None
 
+    system_info: ClassVar[SystemInfo] = None
+
     def __post_init__(self):
-        for sensor in getattr(system, self.device).sensors:
+        if self.__class__.system_info is None:
+            self.__class__.system_info = SystemInfo()
+        for sensor in getattr(self.__class__.system_info, self.device).sensors:
             for f_attr, f_val in self.filters.items():
                 if getattr(sensor, f_attr) != f_val:  # if any filter fails, break loop
                     break
@@ -66,36 +65,25 @@ class RingLightSpec:
         return command
 
 
-# TODO: Implement config and load these constants
-rings = [
-    RingLightSpec(
-        id=1, name='CPU',
-        temp_sensor=SensorSpec('cpu', dict(sensor_type='Temperature'), min=35.0, max=85.0),
-        load_sensor=SensorSpec('cpu', dict(sensor_type='Load', name='CPU Total')),
-        fan_sensor=SensorSpec('superio', dict(sensor_type='Control', name='Fan Control #2'))
-    ),
-    RingLightSpec(
-        id=2, name='GPU',
-        temp_sensor=SensorSpec('gpu', dict(sensor_type='Temperature'), min=35.0, max=85.0),
-        load_sensor=SensorSpec('gpu', dict(sensor_type='Load', name='GPU Core')),
-        fan_sensor=SensorSpec('gpu', dict(sensor_type='Control', name='GPU Fan'))
-    )
-]
+rings: List[RingLightSpec] = []
+ser: Optional[serial.Serial] = None
 
-# Get the Arduino port
-arduino_list = serial.tools.list_ports.grep(ARDUINO_ID)
 
-for device in arduino_list:
-    arduino_port = device.device
-    break
-else:
-    raise ConnectionError(f'Arduino serial port not found for specified VID:CID = {ARDUINO_ID}')
+def setup_serial():
+    global ser
 
-serial_timeout = 3
+    arduino_list = serial.tools.list_ports.grep(arduino_id)
+    for device in arduino_list:
+        arduino_port = device.device
+        break
+    else:
+        raise ConnectionError(f'Arduino serial port not found for specified VID:CID = {arduino_id}')
 
-ser = serial.Serial(arduino_port, 115200, timeout=serial_timeout)
-print('Connected to serial port, waiting for arduino to reset')
-sleep(4)  # Wait for arduino reset on serial connection
+    serial_timeout = 3
+
+    ser = serial.Serial(arduino_port, 115200, timeout=serial_timeout)
+    print('Connected to serial port, waiting for arduino to reset')
+    sleep(4)  # Wait for arduino reset on serial connection
 
 
 def read_serial(until=serial.LF):
@@ -118,9 +106,8 @@ def flush_serial():
     ser.flush()
 
 
-# TODO: Repackage to a main module
-# TODO: Consider implementing a minimal GUI / Tray icon?
-def main():
+def update_loop():
+    setup_serial()
     try:
         while True:
             for ring in rings:
@@ -133,7 +120,3 @@ def main():
     except KeyboardInterrupt:  # TODO: Catch serial errors, attempt reconnect?
         print("Exit!")
         ser.close()
-
-
-if __name__ == '__main__':
-    main()
