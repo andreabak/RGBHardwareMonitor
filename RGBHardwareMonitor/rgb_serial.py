@@ -5,7 +5,7 @@ from typing import Mapping, ClassVar, List, Optional
 import serial
 from serial.tools import list_ports
 
-from hardware_monitor import SystemInfo, Sensor
+from .hardware_monitor import SystemInfo, Sensor
 
 
 arduino_id = None

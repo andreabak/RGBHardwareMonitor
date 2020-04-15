@@ -2,7 +2,7 @@ import re
 import argparse
 import configparser
 
-import rgb_serial
+from . import rgb_serial
 
 
 def sensor_spec_from_cfg(config, section_name, subsection_name):
