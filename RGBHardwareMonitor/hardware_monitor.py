@@ -3,8 +3,7 @@ from typing import Optional, List, Union
 
 from wmi import WMI
 
-
-# You must have OpenHardwareMonitor running!!
+from . import logger
 
 
 def _wmi_get_ohm():
@@ -127,24 +126,20 @@ class Device:
 
     def get_info(self):
         """Function for get device info with a correct format"""
-        cad = "\n" + self.hardware_type + "\n-------------------\n"
-        cad += "\t* Name: " + self.name
-        cad += "\n\t* Identifier: " + self.identifier
-        if self.parent != "":
-            cad += "\n\t* Parent: " + self.parent + "\n"
+        info_str = f'\n{self.hardware_type}\n' \
+                   f'-------------------\n' \
+                   f'\t* Name: {self.name}\n' \
+                   f'\t* Identifier: {self.identifier}\n'
+        if self.parent:
+            info_str += f'\t* Parent: {self.parent}\n'
         if self.sensors:
-            cad += "\n\t* Sensors:\n\t------------"
-            for sensor in self.sensors:
-                sensorcad = "\n\t\t- {:22}\t{:27}\t{:11}\t{:.2f}".format(
-                    sensor.name,
-                    sensor.identifier,
-                    sensor.sensor_type,
-                    sensor.value
-                )
-                cad += sensorcad
-        cad += "\n"
+            info_str += '\t* Sensors:\n' \
+                        '\t------------\n' \
+                      + '\n'.join(f'\t\t- {sens.name:22}\t{sens.identifier:27}\t{sens.sensor_type:11}\t{sens.value:.2f}'
+                                  for sens in self.sensors)
+        info_str += '\n'
 
-        return cad
+        return info_str
 
 
 @dataclass
@@ -218,18 +213,19 @@ class SystemInfo:
         for device_list in (self.mainboard, self.superio, self.cpu, self.ram, self.gpu, self.hdd):
             if isinstance(device_list, list):
                 for device in device_list:
-                    print(device.get_info())
+                    logger.info(device.get_info())
             else:
-                print(device_list.get_info())
+                logger.info(device_list.get_info())
 
     def print_info(self):
-        print(self.name)
-        print("---------------")
-        print("OS:", self.os_name, self.os_architecture)
+        logger.info(f'self.name\n'
+                    f'---------------\n'
+                    f'OS: {self.os_name} {self.os_architecture}')
         self.print_devices()
 
 
 # TODO: Auto-loading OpenHardwareMonitor if not running
 
 if __name__ == '__main__':
+    logger.setLevel('INFO')
     SystemInfo().print_info()

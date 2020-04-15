@@ -2,7 +2,9 @@ import re
 import argparse
 import configparser
 
+from . import logger, log_stream_handler, setup_file_logging
 from . import rgb_serial
+from .hardware_monitor import SystemInfo
 
 
 def sensor_spec_from_cfg(config, section_name, subsection_name):
@@ -42,15 +44,33 @@ def ring_lights_from_cfg(config):
 
 def parse_args():
     argparser = argparse.ArgumentParser()
+    argparser.add_argument('-i', '--system-info', action='store_true')
     argparser.add_argument('-c', '--config', default='config.ini')
+    log_choices = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET']
+    argparser.add_argument('--log-file', default=None)
+    argparser.add_argument('-l', '--log-level', choices=log_choices, default=None)
+    argparser.add_argument('-v', '--verbosity', choices=log_choices, default=None)
     return argparser.parse_args()
 
 
 # TODO: Consider implementing a minimal GUI / Tray icon?
 def main():
     args = parse_args()
+
+    if args.system_info:
+        SystemInfo().print_info()
+        exit()
+
     config = configparser.ConfigParser()
     config.read(args.config)
+
+    verbosity = args.verbosity or config['RGBHardwareMonitor'].get('verbosity', 'INFO')
+    log_stream_handler.setLevel(verbosity)
+    log_file = args.log_file or config['RGBHardwareMonitor'].get('log_file')
+    log_level = args.log_level or config['RGBHardwareMonitor'].get('log_level', 'INFO')
+    if log_file:
+        setup_file_logging(log_file, log_level)
+
     rgb_serial.arduino_id = config['RGBHardwareMonitor']['arduino_serial_id']
     rgb_serial.rings = ring_lights_from_cfg(config)
     rgb_serial.update_loop()

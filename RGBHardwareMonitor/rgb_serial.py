@@ -3,8 +3,10 @@ from dataclasses import dataclass
 from typing import Mapping, ClassVar, List, Optional
 
 import serial
+from serial import SerialException
 from serial.tools import list_ports
 
+from . import logger
 from .hardware_monitor import SystemInfo, Sensor
 
 
@@ -57,20 +59,21 @@ class RingLightSpec:
     fan_sensor: SensorSpec
 
     def prepare_command(self):
-        print(f"Preparing command for ring #{self.id} \"{self.name}\" -> "
-              f"Temp: {self.temp_sensor.value:.2f}°C, "
-              f"Load: {self.load_sensor.value:.2f}%, "
-              f"Fan: {self.fan_sensor.value:.2f}%")
+        logger.debug(f"Preparing command for ring #{self.id} \"{self.name}\" -> "
+                     f"Temp: {self.temp_sensor.value:.2f}°C, "
+                     f"Load: {self.load_sensor.value:.2f}%, "
+                     f"Fan: {self.fan_sensor.value:.2f}%")
         command = f'U {self.id} {self.temp_sensor.raw_value} {self.load_sensor.raw_value} {self.fan_sensor.raw_value}\n'
         return command
 
 
 rings: List[RingLightSpec] = []
 ser: Optional[serial.Serial] = None
+serial_timeout = 3
 
 
 def setup_serial():
-    global ser
+    global ser, serial_timeout
 
     arduino_list = serial.tools.list_ports.grep(arduino_id)
     for device in arduino_list:
@@ -79,10 +82,10 @@ def setup_serial():
     else:
         raise ConnectionError(f'Arduino serial port not found for specified VID:CID = {arduino_id}')
 
-    serial_timeout = 3
-
+    if ser:
+        ser.close()
     ser = serial.Serial(arduino_port, 115200, timeout=serial_timeout)
-    print('Connected to serial port, waiting for arduino to reset')
+    logger.debug('Connected to serial port, waiting for arduino to reset')
     sleep(4)  # Wait for arduino reset on serial connection
 
 
@@ -94,29 +97,31 @@ def read_serial(until=serial.LF):
     return buffer.decode().strip()
 
 
-def print_serial(*args, **kwargs):  # TODO: Implement logging
+def log_serial(*args, **kwargs):
     buffer = read_serial(*args, **kwargs)
     if buffer:
-        print(f'Received: {buffer}')
+        logger.debug(f'Received: {buffer}')
 
 
 def flush_serial():
     if ser.in_waiting:
-        print_serial(until=None)
+        log_serial(until=None)
     ser.flush()
 
 
 def update_loop():
-    setup_serial()
-    try:
-        while True:
-            for ring in rings:
-                command = ring.prepare_command()
-                ser.write(command.encode('UTF-8'))
-                sleep(0.5)  # Wait for reply
-                flush_serial()
-                sleep(0.5)
-            print()
-    except KeyboardInterrupt:  # TODO: Catch serial errors, attempt reconnect?
-        print("Exit!")
-        ser.close()
+    while True:
+        try:
+            setup_serial()
+            while True:
+                for ring in rings:
+                    command = ring.prepare_command()
+                    ser.write(command.encode('UTF-8'))
+                    sleep(0.5)  # Wait for reply
+                    flush_serial()
+                    sleep(0.5)
+        except SerialException as exc:
+            logger.warning(f'Serial exception: {str(exc)}', exc_info=True)
+        except KeyboardInterrupt:
+            logger.debug("Exit!")
+            ser.close()
