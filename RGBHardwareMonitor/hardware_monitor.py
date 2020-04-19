@@ -207,7 +207,7 @@ class SystemInfo:
     def __post_init__(self, start_ohm):
         """Constructor"""
         wmi_ohm = _wmi_get_ohm()
-        if is_openhardwaremonitor_running():
+        if not is_openhardwaremonitor_running():
             if not start_ohm:
                 raise RuntimeError('Failed while querying OpenHardwareMonitor WMI namespace. OHM not running?')
             else:
