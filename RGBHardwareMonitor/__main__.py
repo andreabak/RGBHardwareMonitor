@@ -2,7 +2,8 @@ import re
 import argparse
 import configparser
 
-from . import log_stream_handler, setup_file_logging, rgb_serial, hardware_monitor
+from . import log_stream_handler, setup_file_logging, rgb_serial, hardware_monitor, quit_event
+from .systray import RGBHardwareMonitorSysTray
 
 
 def sensor_spec_from_cfg(config, section_name, subsection_name):
@@ -51,8 +52,10 @@ def parse_args():
     return argparser.parse_args()
 
 
-# TODO: Consider implementing a minimal GUI / Tray icon?
+# TODO: More systray features
 def main():
+    quit_event.clear()
+
     args = parse_args()
 
     config = configparser.ConfigParser()
@@ -73,7 +76,8 @@ def main():
 
     rgb_serial.arduino_id = config['RGBHardwareMonitor']['arduino_serial_id']
     rgb_serial.rings = ring_lights_from_cfg(config)
-    rgb_serial.update_loop()
+    with RGBHardwareMonitorSysTray() as systray:
+        rgb_serial.update_loop()
 
 
 if __name__ == '__main__':

@@ -2,3 +2,4 @@ python>=3.7
 WMI>=1,<2
 pySerial>=3,<4
 PyWin32>=220
+infi.systray<1

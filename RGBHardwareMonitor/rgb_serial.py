@@ -6,7 +6,7 @@ import serial
 from serial import SerialException
 from serial.tools import list_ports
 
-from . import logger
+from . import logger, quit_event
 from .hardware_monitor import SystemInfo, Sensor
 
 
@@ -115,11 +115,13 @@ def update_loop():
             setup_serial()
             while True:
                 for ring in rings:
+                    if quit_event.is_set():
+                        return
                     command = ring.prepare_command()
                     ser.write(command.encode('UTF-8'))
-                    sleep(0.5)  # Wait for reply
+                    sleep(0.2)  # Wait for reply
                     flush_serial()
-                    sleep(0.5)
+                    sleep(0.8)
         except SerialException as exc:
             logger.warning(f'Serial exception: {str(exc)}', exc_info=True)
         except KeyboardInterrupt:

@@ -1,6 +1,7 @@
 import ctypes
 import logging
 import sys
+from threading import Event
 
 
 LOG_FORMAT = '%(asctime)s [%(module)s] %(levelname)s: %(message)s'
@@ -23,6 +24,9 @@ def setup_file_logging(file_path, log_level):
     log_file_handler.setFormatter(log_formatter)
     log_file_handler.setLevel(log_level)
     logger.addHandler(log_file_handler)
+
+
+quit_event = Event()
 
 
 def is_admin():
