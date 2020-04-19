@@ -3,11 +3,11 @@ from threading import Thread, Event
 
 from infi.systray import SysTrayIcon
 
-from . import quit_event
+from . import quit_event, app_path
 
 
 class RGBHardwareMonitorSysTray(SysTrayIcon):
-    icons = [f'resources/icon/icon.f{n}.ico' for n in range(6)]
+    icons = [app_path(f'resources/icon/icon.f{n}.ico') for n in range(6)]
     icons_index = 0
     animation_interval = 1.0 / len(icons)
     animation_thread = None

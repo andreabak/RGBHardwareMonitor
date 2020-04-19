@@ -52,5 +52,8 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-/.idea/
 *.ai
+
+/.idea/
+/build/
+/dist/

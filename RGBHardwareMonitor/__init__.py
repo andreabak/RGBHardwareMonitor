@@ -1,8 +1,11 @@
 import ctypes
 import logging
+import os
 import sys
 from threading import Event
 
+
+### --- LOGGING --- ###
 
 LOG_FORMAT = '%(asctime)s [%(module)s] %(levelname)s: %(message)s'
 LOG_DATEFORMAT = '%Y-%m-%d %H:%M:%S'
@@ -26,6 +29,8 @@ def setup_file_logging(file_path, log_level):
     logger.addHandler(log_file_handler)
 
 
+### --- RUNTIME --- ###
+
 quit_event = Event()
 
 
@@ -46,3 +51,16 @@ def ensure_admin():
     if not is_admin():
         run_as_admin(sys.executable, sys.argv)
         exit()
+
+
+### --- PATHS --- ###
+
+def app_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
