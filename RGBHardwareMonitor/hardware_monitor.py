@@ -1,14 +1,41 @@
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, InitVar
 from typing import Optional, List, Union
+from pathlib import Path
 
 from wmi import WMI
 
-from . import logger
+from . import logger, run_as_admin
+
+
+openhardwaremonitor_exe_path = None
 
 
 def _wmi_get_ohm():
     """Returns OpenHardwareMonitor's WMI object"""
     return WMI(namespace=r"root\OpenHardwareMonitor")
+
+
+def is_openhardwaremonitor_running():
+    return bool(_wmi_get_ohm().Hardware())
+
+
+def openhardwaremonitor_start():
+    global openhardwaremonitor_exe_path
+    if openhardwaremonitor_exe_path is None:
+        raise ValueError('Cannot run OpenHardwareMonitor: executable path not specified')
+    run_dir = Path(openhardwaremonitor_exe_path).parent
+    logger.debug('Starting OpenHardwareMonitor...')
+    run_as_admin(openhardwaremonitor_exe_path, run_dir=str(run_dir))
+    retry = 15
+    while retry > 0:
+        time.sleep(2)
+        if is_openhardwaremonitor_running():
+            logger.debug('OpenHardwareMonitor started')
+            break
+        retry -= 1
+    else:
+        raise RuntimeError('Failed starting OpenHardwareMonitor: WMI timed out')
 
 
 @dataclass
@@ -174,9 +201,18 @@ class SystemInfo:
     gpu: Optional[Union[Device, List[Device]]] = None
     """Graphic Processor of the computer (Nvidia or AMD)"""
 
-    def __post_init__(self):
+    start_ohm: InitVar[bool] = False
+    """Init var to start OpenHardwareMonitor"""
+
+    def __post_init__(self, start_ohm):
         """Constructor"""
         wmi_ohm = _wmi_get_ohm()
+        if is_openhardwaremonitor_running():
+            if not start_ohm:
+                raise RuntimeError('Failed while querying OpenHardwareMonitor WMI namespace. OHM not running?')
+            else:
+                openhardwaremonitor_start()
+                wmi_ohm = _wmi_get_ohm()
         self.name = WMI().Win32_ComputerSystem()[0].Name
         self.os_name = WMI().Win32_OperatingSystem()[0].Caption
         self.os_architecture = WMI().Win32_OperatingSystem()[0].OSArchitecture
@@ -223,8 +259,6 @@ class SystemInfo:
                     f'OS: {self.os_name} {self.os_architecture}')
         self.print_devices()
 
-
-# TODO: Auto-loading OpenHardwareMonitor if not running
 
 if __name__ == '__main__':
     logger.setLevel('INFO')

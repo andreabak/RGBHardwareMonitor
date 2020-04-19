@@ -2,9 +2,7 @@ import re
 import argparse
 import configparser
 
-from . import logger, log_stream_handler, setup_file_logging
-from . import rgb_serial
-from .hardware_monitor import SystemInfo
+from . import log_stream_handler, setup_file_logging, rgb_serial, hardware_monitor
 
 
 def sensor_spec_from_cfg(config, section_name, subsection_name):
@@ -57,12 +55,14 @@ def parse_args():
 def main():
     args = parse_args()
 
-    if args.system_info:
-        SystemInfo().print_info()
-        exit()
-
     config = configparser.ConfigParser()
     config.read(args.config)
+
+    hardware_monitor.openhardwaremonitor_exe_path = config['RGBHardwareMonitor']['openhardwaremonitor_path']
+
+    if args.system_info:
+        hardware_monitor.SystemInfo().print_info()
+        exit()
 
     verbosity = args.verbosity or config['RGBHardwareMonitor'].get('verbosity', 'INFO')
     log_stream_handler.setLevel(verbosity)

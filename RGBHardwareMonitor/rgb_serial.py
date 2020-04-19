@@ -29,7 +29,7 @@ class SensorSpec:
 
     def __post_init__(self):
         if self.__class__.system_info is None:
-            self.__class__.system_info = SystemInfo()
+            self.__class__.system_info = SystemInfo(start_ohm=True)
         for sensor in getattr(self.__class__.system_info, self.device).sensors:
             for f_attr, f_val in self.filters.items():
                 if getattr(sensor, f_attr) != f_val:  # if any filter fails, break loop
