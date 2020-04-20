@@ -5,7 +5,7 @@ import sys
 from threading import Event
 
 
-### --- LOGGING --- ###
+# ----- LOGGING ----- #
 
 LOG_FORMAT = '%(asctime)s [%(module)s] %(levelname)s: %(message)s'
 LOG_DATEFORMAT = '%Y-%m-%d %H:%M:%S'
@@ -29,7 +29,7 @@ def setup_file_logging(file_path, log_level):
     logger.addHandler(log_file_handler)
 
 
-### --- RUNTIME --- ###
+# ----- RUNTIME ----- #
 
 quit_event = Event()
 
@@ -53,7 +53,7 @@ def ensure_admin():
         exit()
 
 
-### --- PATHS --- ###
+# ----- PATHS ----- #
 
 def app_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """

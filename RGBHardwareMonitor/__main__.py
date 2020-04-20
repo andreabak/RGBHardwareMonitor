@@ -53,9 +53,7 @@ def parse_args():
 
 
 # TODO: More systray features: show status icon (running, paused, starting) run/pause, edit colors (autosave config)
-# TODO: Application (exe?) wrapping
 # TODO: Autostart (scheduled task)
-# TODO: Installer
 def main():
     quit_event.clear()
 
