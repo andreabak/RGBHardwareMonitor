@@ -52,7 +52,7 @@ void RingLights::mixFlame(Color& outColor, float flameForce, float heat, float d
 void RingLights::mixIdle(Color& outColor, float pos, float offset, float mixStrength=1.0) {
     if (!idleMix || !mixStrength)
         return;
-    Color idleColor = Color::fromHSV(fmod((pos + offset) / numLEDs, 1.0), 1.0, max(0.33, min(1.0, load*2)));
+    Color idleColor = Color::fromHSV(fmod((pos + offset) / numLEDs, 1.0), 1.0, 1.0);
     outColor.mixWith(idleColor, idleMix * mixStrength);
 }
 
@@ -129,7 +129,7 @@ void RingLights::updateRing() {  // float values range 0.0-1.0
     }
     for (uint16_t i=0; i<numLEDs; i++) {
         if (ringFlameForce[i] > 0.0)
-            ringFlameForce[i] *= 0.975 * (1.0 - ((entropy/150000.0) * (ringFlameForce[i] / 200.0)));
+            ringFlameForce[i] *= 0.9 * (1.0 - ((entropy/150000.0) * (ringFlameForce[i] / 200.0)));
         if (ringFlameForce[i] <= 1.0)
             ringFlameForce[i] = 0.0;
     }

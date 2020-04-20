@@ -82,9 +82,9 @@ void parseCommand(char* cmdBuffer) {  // TODO: Implement commands to set custom 
         DEBUG_PRINT("Received empty input");
 
     if (cmd == 'U') {
-        if (cmdPartNum != 5)
+        if (cmdPartNum != 5) {
             DEBUG_PRINT("Invalid arguments length for command %c (given %d, expected %d)", cmd, cmdPartNum - 1, 4);
-        if (!ringId || ringId > ringsCount) {
+        } else if (!ringId || ringId > ringsCount) {
             DEBUG_PRINT("Invalid ring id: %d", ringId);
         } else {
             float inHeat = max(0.0, min(1.0, (rawHeat / 255.0)));
