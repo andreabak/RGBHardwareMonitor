@@ -15,7 +15,7 @@ BUILD_VERSION_TEMPLATE_PATH = 'build_version_template.txt'
 SETUP_SCRIPT_TEMPLATE_PATH = 'setup_script_template.nsi'
 ICON_PATH = 'resources/icon/icon.f0.ico'
 RELEASE_NAME = 'RGBHardwareMonitor'
-VERSION_TEMPLATE = '{version_major}.{version_minor}.{version_build}.{version_revision}'
+VERSION_TEMPLATE = '{version_major}.{version_minor}.{version_build}{version_revision}'
 PORTABLE_RELEASE_NAME_TEMPLATE = '{release_name}-{version}-portable.zip'
 SETUP_RELEASE_NAME_TEMPLATE = '{release_name}-{version}-setup.exe'
 
@@ -46,6 +46,26 @@ def run_process(args, **kwargs):
 
 def combined_std_out_err(process_result):
     return process_result.stdout + process_result.stderr.strip()
+
+
+def create_readable_version(major, minor, build, revision, commit, long=False):
+    bsplit = build.split('-', 1)
+    if len(bsplit) > 1:
+        build, v_type = bsplit
+    else:
+        v_type = None
+    v = '.'.join((major, minor, build))
+    if revision and revision not in (0, '0'):
+        v += '.' + revision
+    if v_type:
+        v += '-' + v_type
+    if long:
+        v += f' ({commit})'
+    return v
+
+
+def ver_num_clean(v):
+    return re.sub(r'[^\d]+', '', v, re.I)
 
 
 class TemplateFile:
@@ -138,22 +158,18 @@ if git_status.stdout.strip():
 # -- Create version number from tags/commit
 
 logger.info('Creating release version number')
-git_describe = run_process('git describe --tags')
-version_match = re.match(r'v(\d+)\.(\d+)\.(\d+)-(\d+)-(.+)\b', git_describe.stdout.strip(), flags=re.I)
+git_describe = run_process('git describe --tags --long')
+version_match = re.match(r'v(\d+.*)\.(\d+.*)\.(\d+.*)-(\d+)-(.+)$', git_describe.stdout.strip(), flags=re.I)
 if not version_match:
     abort(f'Couldn\'t extract version from git describe. Output was:\n{combined_std_out_err(git_describe)}')
-version_major = version_match.group(1)
-version_minor = version_match.group(2)
-version_build = version_match.group(3)
-version_revision = version_match.group(4)
-version_commit = version_match.group(5)
-version = VERSION_TEMPLATE.format(
-    version_major=version_major,
-    version_minor=version_minor,
-    version_build=version_build,
-    version_revision=version_revision,
-    version_commit=version_commit
-)
+ver_major = version_match.group(1)
+ver_minor = version_match.group(2)
+ver_build = version_match.group(3)
+ver_revision = version_match.group(4)
+ver_commit = version_match.group(5)
+version = create_readable_version(ver_major, ver_minor, ver_build, ver_revision, ver_commit)
+version_long = create_readable_version(ver_major, ver_minor, ver_build, ver_revision, ver_commit, long=True)
+version_numeric = '.'.join(ver_num_clean(v) for v in (ver_major, ver_minor, ver_build, ver_revision))
 
 
 # -- Create release paths
@@ -183,12 +199,12 @@ logger.info('Compiling build_version file')
 build_version_template = TemplateFile(BUILD_VERSION_TEMPLATE_PATH)
 build_version_namespace = dict(
     release_name=RELEASE_NAME,
-    version_major=version_major,
-    version_minor=version_minor,
-    version_build=version_build,
-    version_revision=version_revision,
+    version_major=ver_num_clean(ver_major),
+    version_minor=ver_num_clean(ver_minor),
+    version_build=ver_num_clean(ver_build),
+    version_revision=ver_num_clean(ver_revision),
     version=version,
-    version_commit=version_commit,
+    version_commit=ver_commit,
 )
 build_version_template.write(build_version_path, build_version_namespace)
 
@@ -235,7 +251,7 @@ setup_script_install_instructions = generate_setup_files_instructions(build_dist
 setup_script_uninstall_instructions = generate_setup_files_instructions(build_dist_path, is_uninstall=True)
 setup_script_namespace = dict(
     t_release_name=RELEASE_NAME,
-    t_version=version,
+    t_version=version_numeric,
     t_root_abspath=os.path.abspath('.'),
     t_setup_abspath=os.path.abspath(setup_release_path),
     t_install_instructions=setup_script_install_instructions,

@@ -31,7 +31,7 @@ VSVersionInfo(
         u'040904B0',
         [StringStruct(u'CompanyName', u'abk16'),
         StringStruct(u'FileDescription', u'${release_name}'),
-        StringStruct(u'FileVersion', u'${version} (${version_commit})'),
+        StringStruct(u'FileVersion', u'${version_long}'),
         StringStruct(u'InternalName', u'${release_name}'),
         StringStruct(u'LegalCopyright', u'abk16  © 2020'),
         StringStruct(u'OriginalFilename', u'${release_name}.exe'),
