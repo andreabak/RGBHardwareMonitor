@@ -5,9 +5,6 @@ ehthumbs.db
 # Python
 __pycache__
 
-# OpenHardware
-OpenHardwareMonitor
-
 # Folder config file
 Desktop.ini
 
@@ -52,8 +49,13 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-*.ai
-
+# PyCharm
 /.idea/
+
+# Build system
 /build/
 /dist/
+/releases/
+
+# Project-specific
+*.ai
