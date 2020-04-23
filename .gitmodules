@@ -1,0 +1,3 @@
+[submodule "systray"]
+	path = modules/systray
+	url = https://github.com/Infinidat/infi.systray
