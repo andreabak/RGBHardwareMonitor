@@ -3,7 +3,7 @@ import argparse
 import configparser
 
 from . import log_stream_handler, setup_file_logging, rgb_serial, hardware_monitor, quit_event, autorun, is_admin
-from .systray import RGBHardwareMonitorSysTray
+from .systray import RGBHardwareMonitorSysTray, WaitIconAnimation
 
 
 def sensor_spec_from_cfg(config, section_name, subsection_name):
@@ -90,9 +90,10 @@ def main():
         setup_file_logging(log_file, log_level)
 
     rgb_serial.arduino_id = config['RGBHardwareMonitor']['arduino_serial_id']
-    rgb_serial.rings = ring_lights_from_cfg(config)
-    with RGBHardwareMonitorSysTray() as systray:
-        rgb_serial.update_loop()
+
+    with RGBHardwareMonitorSysTray(animation_cls=WaitIconAnimation, start_animation=True) as systray:
+        rgb_serial.rings = ring_lights_from_cfg(config)
+        rgb_serial.update_loop(systray=systray)
 
 
 if __name__ == '__main__':

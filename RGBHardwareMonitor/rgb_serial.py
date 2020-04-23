@@ -8,7 +8,7 @@ from serial.tools import list_ports
 
 from . import logger, quit_event
 from .hardware_monitor import SystemInfo, Sensor
-
+from .systray import WaitIconAnimation, RunningIconAnimation
 
 arduino_id = None
 
@@ -109,10 +109,14 @@ def flush_serial():
     ser.flush()
 
 
-def update_loop():
+def update_loop(systray=None):  # TODO: Add pause/play (disconnect serial too)
     while True:
+        if systray is not None:
+            systray.set_animation(WaitIconAnimation, start_animation=True)
         try:
             setup_serial()
+            if systray is not None:
+                systray.set_animation(RunningIconAnimation, start_animation=True)
             while True:
                 for ring in rings:
                     if quit_event.is_set():
