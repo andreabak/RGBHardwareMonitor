@@ -6,9 +6,11 @@ import serial
 from serial import SerialException
 from serial.tools import list_ports
 
-from . import logger, quit_event, pause_event
+from .log import logger
+from .runtime import quit_event, pause_event
 from .hardware_monitor import SystemInfo, Sensor
 from .systray import WaitIconAnimation, RunningIconAnimation
+
 
 arduino_id = None
 

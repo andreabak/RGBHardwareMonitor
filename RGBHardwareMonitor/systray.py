@@ -4,7 +4,9 @@ from threading import Thread, Event
 # TODO: Replace import with installable library once done?
 from modules.systray.src.systray import SysTrayIcon, CheckBoxMenuOption, MenuOption
 
-from . import quit_event, app_path, autorun, pause_event
+from . import autorun
+from . import runtime
+from .runtime import quit_event, pause_event, app_path
 
 
 class IconAnimation:

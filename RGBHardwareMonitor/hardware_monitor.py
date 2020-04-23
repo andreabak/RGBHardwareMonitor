@@ -5,7 +5,8 @@ from pathlib import Path
 
 from wmi import WMI
 
-from . import logger, run_as_admin
+from .log import logger
+from .runtime import run_as_admin
 
 
 openhardwaremonitor_exe_path = None

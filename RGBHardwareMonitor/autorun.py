@@ -3,7 +3,8 @@ import sys
 
 import win32con
 
-from . import run_self_as_admin, is_admin, in_bundled_app, subprocess_run
+from .runtime import in_bundled_app, is_admin, run_self_as_admin, subprocess_run
+
 
 schedtask_name = 'RGBHardwareMonitor'
 
