@@ -2,7 +2,7 @@ import re
 import argparse
 import configparser
 
-from . import log_stream_handler, setup_file_logging, rgb_serial, hardware_monitor, quit_event
+from . import log_stream_handler, setup_file_logging, rgb_serial, hardware_monitor, quit_event, autorun, is_admin
 from .systray import RGBHardwareMonitorSysTray
 
 
@@ -43,12 +43,19 @@ def ring_lights_from_cfg(config):
 
 def parse_args():
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('-i', '--system-info', action='store_true')
-    argparser.add_argument('-c', '--config', default='config.ini')
+    argparser.add_argument('-i', '--system-info', action='store_true',
+                           help='Print OpenHardwareMonitor system info and exit')
+    argparser.add_argument('--autorun', choices=['enable', 'disable'],
+                           help='Set autorun and exit')
+    argparser.add_argument('-c', '--config', default='config.ini',
+                           help='Specify custom path for configuration')
     log_choices = ['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'NOTSET']
-    argparser.add_argument('--log-file', default=None)
-    argparser.add_argument('-l', '--log-level', choices=log_choices, default=None)
-    argparser.add_argument('-v', '--verbosity', choices=log_choices, default=None)
+    argparser.add_argument('--log-file', default=None,
+                           help='Specify custom path for log file')
+    argparser.add_argument('-l', '--log-level', choices=log_choices, default=None,
+                           help='Log file level')
+    argparser.add_argument('-v', '--verbosity', choices=log_choices, default=None,
+                           help='Console log level')
     return argparser.parse_args()
 
 
@@ -58,6 +65,13 @@ def main():
     quit_event.clear()
 
     args = parse_args()
+
+    if args.autorun:
+        if not is_admin():
+            raise PermissionError('Must run with elevated privileges to set autorun')
+        autorun.set_autorun(args.autorun == 'enable')
+        exit()
+    autorun.check_autorun()
 
     config = configparser.ConfigParser()
     config.read(args.config)

@@ -4,6 +4,10 @@ import os
 import sys
 from threading import Event
 
+import win32con, win32event, win32process
+from win32comext.shell.shell import ShellExecuteEx
+from win32comext.shell import shellcon
+
 
 # ----- LOGGING ----- #
 
@@ -34,6 +38,10 @@ def setup_file_logging(file_path, log_level):
 quit_event = Event()
 
 
+def in_bundled_app():
+    return getattr(sys, 'frozen', False)
+
+
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
@@ -41,10 +49,42 @@ def is_admin():
         return False
 
 
-def run_as_admin(exe_path, *args, run_dir=None):
-    result = ctypes.windll.shell32.ShellExecuteW(None, "runas", exe_path, " ".join(args), run_dir, 1)
-    if result <= 32:  # failed
-        raise OSError('Failed running process with elevated privileges')
+def run_as_admin(exe_path, args=None, run_dir=None, show_cmd=None, wait=False):
+    show_cmd = win32con.SW_NORMAL if show_cmd is None else show_cmd
+    if args is None:
+        args = tuple()
+    args = " ".join(args)
+    if run_dir is None:
+        run_dir = ''
+
+    procInfo = ShellExecuteEx(
+        lpVerb='runas',
+        lpFile=exe_path,
+        lpParameters=args,
+        lpDirectory=run_dir,
+        nShow=show_cmd,
+        fMask=shellcon.SEE_MASK_NOCLOSEPROCESS | shellcon.SEE_MASK_FLAG_NO_UI,
+    )
+
+    if wait:
+        procHandle = procInfo['hProcess']
+        obj = win32event.WaitForSingleObject(procHandle, win32event.INFINITE)
+        rc = win32process.GetExitCodeProcess(procHandle)
+        # print "Process handle %s returned code %s" % (procHandle, rc)
+    else:
+        rc = None
+
+    return rc
+
+
+# TODO: Conda/venv detection or maybe raise error?
+def run_self_as_admin(new_args=None, **kwargs):
+    run_dir = os.getcwd()
+    if new_args is None:
+        new_args = sys.argv[1:]
+    if not in_bundled_app():  # When not running in bundled app, prepend script path
+        new_args.insert(0, sys.argv[0])
+    run_as_admin(sys.executable, new_args, run_dir=run_dir, **kwargs)
 
 
 def ensure_admin():
