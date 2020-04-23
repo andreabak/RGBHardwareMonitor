@@ -81,8 +81,15 @@ def run_as_admin(exe_path, args=None, run_dir=None, show_cmd=None, wait=False):
     return rc
 
 
-# TODO: Conda/venv detection or maybe raise error?
+def inside_conda_or_venv():
+    is_venv = hasattr(sys, 'real_prefix')
+    is_conda = 'CONDA_PREFIX' in os.environ
+    return is_venv or is_conda
+
+
 def run_self_as_admin(new_args=None, **kwargs):
+    if inside_conda_or_venv():
+        raise NotImplementedError('Cannot rerun elevated within conda or venv')
     run_dir = os.getcwd()
     if new_args is None:
         new_args = sys.argv[1:]
