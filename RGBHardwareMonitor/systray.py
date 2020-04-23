@@ -54,7 +54,11 @@ class IconAnimation:
 
 
 class IconStaticAnimation(IconAnimation):
-    frames_interval = 30_000_000
+    frames_interval = 5
+
+    def _animation_loop(self):
+        self._icon_callback()
+        # No frame stepping
 
 
 class RunningIconAnimation(IconAnimation):
