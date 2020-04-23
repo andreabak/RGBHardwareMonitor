@@ -105,6 +105,7 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wr
 
         super().__init__(animation_cls.icons[0], "RGBHardwareMonitor",
                          menu_options=menu_options,
+                         default_menu_index=0,
                          on_quit=on_quit,
                          window_class_name="RGBHardwareMonitorTray",
                          error_handler=systray_error_handler)
