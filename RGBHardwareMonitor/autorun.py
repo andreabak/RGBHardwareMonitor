@@ -1,10 +1,9 @@
 import os
 import sys
-import subprocess
 
 import win32con
 
-from . import run_self_as_admin, is_admin, in_bundled_app, error_popup
+from . import run_self_as_admin, is_admin, in_bundled_app, subprocess_run
 
 schedtask_name = 'RGBHardwareMonitor'
 
@@ -30,31 +29,13 @@ ps_schedtask_check = [
 ]
 
 
-def subprocess_pyinstaller():
-    if hasattr(subprocess, 'STARTUPINFO'):  # Windows
-        # Prevent command window from opening
-        si = subprocess.STARTUPINFO()
-        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        env = os.environ  # Fix search paths
-    else:
-        si = None
-        env = None
-
-    ret = dict(stdin=subprocess.PIPE,
-               stdout=subprocess.PIPE,
-               stderr=subprocess.PIPE,
-               startupinfo=si,
-               env=env)
-    return ret
-
-
 def ps_bake_commands(*lines):
     return ['powershell', '-Command', f'{{ {"; ".join(lines)} }}']
 
 
 def ps_run(*commands, raise_on_error=True):
     baked_commands = ps_bake_commands(*commands)
-    process = subprocess.run(['powershell', *baked_commands], text=True, **subprocess_pyinstaller())
+    process = subprocess_run(['powershell', *baked_commands], text=True)
     if raise_on_error and process.returncode != 0:
         raise RuntimeError(f'Failed executing powershell script (return code = {process.returncode})\n\n'
                            f'{process.stdout}\n\n{process.stderr}')

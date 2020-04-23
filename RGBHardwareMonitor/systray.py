@@ -2,7 +2,7 @@ import time
 from threading import Thread, Event
 
 # TODO: Replace import with installable library once done?
-from modules.systray.src.systray import SysTrayIcon, CheckBoxMenuOption
+from modules.systray.src.systray import SysTrayIcon, CheckBoxMenuOption, MenuOption
 
 from . import quit_event, app_path, autorun, pause_event
 

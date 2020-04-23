@@ -1,6 +1,7 @@
 import ctypes
 import logging
 import os
+import subprocess
 import sys
 from threading import Event
 
@@ -39,12 +40,20 @@ def error_popup(msg, title='Error'):
 
 # ----- RUNTIME ----- #
 
+# TODO: Split module (__init__ is getting crowded)
+
 quit_event = Event()
 pause_event = Event()
 
 
 def in_bundled_app():
     return getattr(sys, 'frozen', False)
+
+
+def inside_conda_or_venv():
+    is_venv = hasattr(sys, 'real_prefix')
+    is_conda = 'CONDA_PREFIX' in os.environ
+    return is_venv or is_conda
 
 
 def is_admin():
@@ -82,12 +91,6 @@ def run_as_admin(exe_path, args=None, run_dir=None, show_cmd=None, wait=False):
     return rc
 
 
-def inside_conda_or_venv():
-    is_venv = hasattr(sys, 'real_prefix')
-    is_conda = 'CONDA_PREFIX' in os.environ
-    return is_venv or is_conda
-
-
 def run_self_as_admin(new_args=None, **kwargs):
     if inside_conda_or_venv():
         raise NotImplementedError('Cannot rerun elevated within conda or venv')
@@ -103,6 +106,28 @@ def ensure_admin():
     if not is_admin():
         run_as_admin(sys.executable, sys.argv)
         exit()
+
+
+def subprocess_pyinstaller():
+    if hasattr(subprocess, 'STARTUPINFO'):  # Windows
+        # Prevent command window from opening
+        si = subprocess.STARTUPINFO()
+        si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        env = os.environ  # Fix search paths
+    else:
+        si = None
+        env = None
+
+    ret = dict(stdin=subprocess.PIPE,
+               stdout=subprocess.PIPE,
+               stderr=subprocess.PIPE,
+               startupinfo=si,
+               env=env)
+    return ret
+
+
+def subprocess_run(args, **kwargs):
+    return subprocess.run(args, **kwargs, **subprocess_pyinstaller())
 
 
 # ----- PATHS ----- #
