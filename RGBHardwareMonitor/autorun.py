@@ -64,20 +64,19 @@ def ps_run(*commands, raise_on_error=True):
 is_enabled = None
 
 
-# TODO: DRY Merge functions (autorun elevate or something)
-def create_autorun():  # TODO: Check return codes
+def _autorun_elevated(*ps_commands, argparse_cmd):
     if is_admin():
-        ps_run(*ps_schedtask_defs, *ps_schedtask_delete, *ps_schedtask_create)
+        ps_run(*ps_commands)
     else:
-        run_self_as_admin(new_args=['--autorun', 'enable'], show_cmd=win32con.SW_HIDE, wait=True)
+        run_self_as_admin(new_args=['--autorun', argparse_cmd], show_cmd=win32con.SW_HIDE, wait=True)
 
 
-# TODO: DRY Merge functions (autorun elevate or something)
-def delete_autorun():  # TODO: Check return codes
-    if is_admin():
-        ps_run(*ps_schedtask_defs, *ps_schedtask_delete)
-    else:
-        run_self_as_admin(new_args=['--autorun', 'disable'], show_cmd=win32con.SW_HIDE, wait=True)
+def create_autorun():
+    _autorun_elevated(*ps_schedtask_defs, *ps_schedtask_delete, *ps_schedtask_create, argparse_cmd='enable')
+
+
+def delete_autorun():
+    _autorun_elevated(*ps_schedtask_defs, *ps_schedtask_delete, argparse_cmd='disable')
 
 
 def check_autorun():
