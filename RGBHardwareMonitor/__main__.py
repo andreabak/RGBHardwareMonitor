@@ -85,6 +85,7 @@ def real_main():
     runtime.config_path = args.config
     runtime.config = configparser.ConfigParser()
     runtime.config.read(runtime.config_path)
+    # TODO: Implement "close OpenHardwareMonitor on exit" option in config
 
     hardware_monitor.openhardwaremonitor_exe_path = runtime.config['RGBHardwareMonitor']['openhardwaremonitor_path']
 
@@ -116,9 +117,9 @@ def real_main():
 def main():
     try:
         sys.exit(real_main())
-    except Exception as e:
+    except Exception as exc:
+        logger.critical(f'Running failed with exception: {exc}', exc_info=exc)
         error_popup(traceback.format_exc())
-        logger.critical(f'Running failed with exception: {e}', exc_info=e)
         raise
 
 

@@ -1,4 +1,5 @@
 import time
+import traceback
 from threading import Thread, Event
 
 # TODO: Replace import with installable library once done?
@@ -6,6 +7,7 @@ from modules.systray.src.systray import SysTrayIcon, CheckBoxMenuOption, MenuOpt
 
 from . import autorun
 from . import runtime
+from .log import logger, error_popup
 from .runtime import quit_event, pause_event, app_path, subprocess_run
 
 
@@ -75,6 +77,11 @@ class PausedIconStatic(IconStaticAnimation):
     icons = [app_path(f'resources/icon_paused/icon_paused.ico')]
 
 
+def systray_error_handler(exc):
+    logger.error(f'Running failed with exception: {exc}', exc_info=exc)
+    error_popup(traceback.format_exc())
+
+
 class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wrap and expose context manager
     default_animation = RunningIconAnimation
 
@@ -99,7 +106,8 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wr
         super().__init__(animation_cls.icons[0], "RGBHardwareMonitor",
                          menu_options=menu_options,
                          on_quit=on_quit,
-                         window_class_name="RGBHardwareMonitorTray")
+                         window_class_name="RGBHardwareMonitorTray",
+                         error_handler=systray_error_handler)
 
         self.animation = None
         self.set_animation(animation_cls, start_animation=start_animation)
