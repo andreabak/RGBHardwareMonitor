@@ -1,7 +1,8 @@
 import time
 from threading import Thread, Event
 
-from infi.systray import SysTrayIcon
+# TODO: Replace import with installable library once done?
+from modules.systray.src.systray import SysTrayIcon
 
 from . import quit_event, app_path
 
