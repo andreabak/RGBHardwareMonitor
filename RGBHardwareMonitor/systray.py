@@ -2,7 +2,10 @@ import time
 from threading import Thread, Event
 
 # TODO: Replace import with installable library once done?
-from modules.systray.src.systray import SysTrayIcon
+from modules.systray.src.systray import SysTrayIcon, CheckBoxMenuOption
+
+from . import quit_event, app_path, autorun
+
 
 from . import quit_event, app_path
 
@@ -14,7 +17,13 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):
     animation_thread = None
     animation_thread_quit = None
 
-    def __init__(self, on_quit=None):
+        menu_options = menu_options or []
+        menu_options += [
+            CheckBoxMenuOption('Run at startup',
+                               check_hook=lambda: autorun.is_enabled,
+                               callback=lambda t: autorun.toggle_autorun()),
+        ]
+
         if on_quit is None:
             on_quit = self._on_quit_default
         super().__init__(self.icons[0], "RGBHardwareMonitor", on_quit=on_quit)
