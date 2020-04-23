@@ -6,7 +6,7 @@ from modules.systray.src.systray import SysTrayIcon, CheckBoxMenuOption, MenuOpt
 
 from . import autorun
 from . import runtime
-from .runtime import quit_event, pause_event, app_path
+from .runtime import quit_event, pause_event, app_path, subprocess_run
 
 
 class IconAnimation:
@@ -84,6 +84,8 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wr
 
         menu_options = menu_options or []
         menu_options += [
+            MenuOption('Edit config',
+                       callback=lambda t: subprocess_run(['start', '', runtime.config_path], shell=True)),
             CheckBoxMenuOption('Pause (and disconnect)',
                                check_hook=lambda: pause_event.is_set(),
                                callback=lambda t: pause_event.clear() if pause_event.is_set() else pause_event.set()),
