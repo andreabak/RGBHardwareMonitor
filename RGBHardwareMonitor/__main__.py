@@ -63,7 +63,8 @@ def parse_args():
     return argparser.parse_args()
 
 
-# TODO: More systray features: show status icon (running, paused, starting) run/pause, edit colors (autosave config)
+# TODO: More systray features: edit config edit colors (autosave config)
+# TODO: Runtime colors set from python to arduino (maybe even persist on flash/eeprom)?
 def real_main():
     quit_event.clear()
     pause_event.clear()

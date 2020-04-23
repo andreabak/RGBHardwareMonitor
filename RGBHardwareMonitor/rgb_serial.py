@@ -109,7 +109,7 @@ def flush_serial():
     ser.flush()
 
 
-def update_loop(systray=None):  # TODO: Add pause/play (disconnect serial too)
+def update_loop(systray=None):
     while True:
         if systray is not None:
             systray.set_animation(WaitIconAnimation, start_animation=True)
