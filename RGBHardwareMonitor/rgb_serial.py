@@ -6,7 +6,7 @@ import serial
 from serial import SerialException
 from serial.tools import list_ports
 
-from . import logger, quit_event
+from . import logger, quit_event, pause_event
 from .hardware_monitor import SystemInfo, Sensor
 from .systray import WaitIconAnimation, RunningIconAnimation
 
@@ -119,7 +119,7 @@ def update_loop(systray=None):  # TODO: Add pause/play (disconnect serial too)
                 systray.set_animation(RunningIconAnimation, start_animation=True)
             while True:
                 for ring in rings:
-                    if quit_event.is_set():
+                    if quit_event.is_set() or pause_event.is_set():
                         return
                     command = ring.prepare_command()
                     ser.write(command.encode('UTF-8'))

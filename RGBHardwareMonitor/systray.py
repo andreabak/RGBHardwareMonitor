@@ -4,7 +4,7 @@ from threading import Thread, Event
 # TODO: Replace import with installable library once done?
 from modules.systray.src.systray import SysTrayIcon, CheckBoxMenuOption
 
-from . import quit_event, app_path, autorun
+from . import quit_event, app_path, autorun, pause_event
 
 
 class IconAnimation:
@@ -82,6 +82,9 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wr
 
         menu_options = menu_options or []
         menu_options += [
+            CheckBoxMenuOption('Pause (and disconnect)',
+                               check_hook=lambda: pause_event.is_set(),
+                               callback=lambda t: pause_event.clear() if pause_event.is_set() else pause_event.set()),
             CheckBoxMenuOption('Run at startup',
                                check_hook=lambda: autorun.is_enabled,
                                callback=lambda t: autorun.toggle_autorun()),

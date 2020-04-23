@@ -3,10 +3,11 @@ import re
 import argparse
 import configparser
 import traceback
+from time import sleep
 
 from . import logger, log_stream_handler, setup_file_logging, rgb_serial, hardware_monitor, quit_event, autorun, \
-    is_admin, error_popup
-from .systray import RGBHardwareMonitorSysTray, WaitIconAnimation
+    is_admin, error_popup, pause_event
+from .systray import RGBHardwareMonitorSysTray, WaitIconAnimation, PausedIconStatic
 
 
 def sensor_spec_from_cfg(config, section_name, subsection_name):
@@ -63,9 +64,9 @@ def parse_args():
 
 
 # TODO: More systray features: show status icon (running, paused, starting) run/pause, edit colors (autosave config)
-# TODO: Autostart (scheduled task)
 def real_main():
     quit_event.clear()
+    pause_event.clear()
 
     args = parse_args()
 
@@ -96,7 +97,12 @@ def real_main():
 
     with RGBHardwareMonitorSysTray(animation_cls=WaitIconAnimation, start_animation=True) as systray:
         rgb_serial.rings = ring_lights_from_cfg(config)
-        rgb_serial.update_loop(systray=systray)
+        while not quit_event.is_set():
+            if not pause_event.is_set():
+                rgb_serial.update_loop(systray=systray)
+            else:
+                systray.set_animation(PausedIconStatic)
+                sleep(1)
 
     return 0
 

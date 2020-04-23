@@ -40,6 +40,7 @@ def error_popup(msg, title='Error'):
 # ----- RUNTIME ----- #
 
 quit_event = Event()
+pause_event = Event()
 
 
 def in_bundled_app():
