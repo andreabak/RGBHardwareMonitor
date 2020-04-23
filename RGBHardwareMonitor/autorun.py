@@ -85,7 +85,7 @@ def check_autorun():
     return is_enabled
 
 
-def set_autorun(state):
+def set_autorun(state):  # TODO: Check success or display a message otherwise
     prev_state = check_autorun()
     if prev_state != state:
         if state:
