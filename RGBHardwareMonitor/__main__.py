@@ -1,8 +1,11 @@
+import sys
 import re
 import argparse
 import configparser
+import traceback
 
-from . import log_stream_handler, setup_file_logging, rgb_serial, hardware_monitor, quit_event, autorun, is_admin
+from . import logger, log_stream_handler, setup_file_logging, rgb_serial, hardware_monitor, quit_event, autorun, \
+    is_admin, error_popup
 from .systray import RGBHardwareMonitorSysTray, WaitIconAnimation
 
 
@@ -61,7 +64,7 @@ def parse_args():
 
 # TODO: More systray features: show status icon (running, paused, starting) run/pause, edit colors (autosave config)
 # TODO: Autostart (scheduled task)
-def main():
+def real_main():
     quit_event.clear()
 
     args = parse_args()
@@ -70,7 +73,7 @@ def main():
         if not is_admin():
             raise PermissionError('Must run with elevated privileges to set autorun')
         autorun.set_autorun(args.autorun == 'enable')
-        exit()
+        return 0
     autorun.check_autorun()
 
     config = configparser.ConfigParser()
@@ -80,7 +83,7 @@ def main():
 
     if args.system_info:
         hardware_monitor.SystemInfo().print_info()
-        exit()
+        return 0
 
     verbosity = args.verbosity or config['RGBHardwareMonitor'].get('verbosity', 'INFO')
     log_stream_handler.setLevel(verbosity)
@@ -95,6 +98,17 @@ def main():
         rgb_serial.rings = ring_lights_from_cfg(config)
         rgb_serial.update_loop(systray=systray)
 
+    return 0
+
+
+def main():
+    try:
+        sys.exit(real_main())
+    except Exception as e:
+        error_popup(traceback.format_exc())
+        logger.critical(f'Running failed with exception: {e}', exc_info=e)
+        raise
+
 
 if __name__ == '__main__':
-    exit(main())
+    main()

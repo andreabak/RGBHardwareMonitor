@@ -33,6 +33,10 @@ def setup_file_logging(file_path, log_level):
     logger.addHandler(log_file_handler)
 
 
+def error_popup(msg, title='Error'):
+    return ctypes.windll.user32.MessageBoxW(0, msg, title, win32con.MB_ICONERROR)
+
+
 # ----- RUNTIME ----- #
 
 quit_event = Event()

@@ -219,11 +219,14 @@ PyInstaller.__main__.run([
     f'--workpath={build_work_path}',
     '--onefile',
     '--add-data=resources;resources',
+    '--add-data=modules;modules',
     '--hidden-import=pkg_resources',
     '--hidden-import=pkg_resources.py2_warn',
     '--windowed',
     f'--icon={ICON_PATH}',
     f'--version-file={build_version_path}',
+    # '-d', 'all',
+    '--win-private-assemblies',
     f'--name={RELEASE_NAME}',
     RUN_SCRIPT
 ])
