@@ -132,4 +132,5 @@ def update_loop(systray=None):
             logger.warning(f'Serial exception: {str(exc)}', exc_info=True)
         except KeyboardInterrupt:
             logger.debug("Exit!")
+        finally:
             ser.close()
