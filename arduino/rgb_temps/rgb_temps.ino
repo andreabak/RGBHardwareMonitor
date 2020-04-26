@@ -52,6 +52,7 @@ void flushSerialInput() {
         Serial.read();
 }
 
+// TODO: Improve commands validation (some values get out of sync / go to zero sometimes)
 void parseCommand(char* cmdBuffer) {  // TODO: Implement commands to set custom colors, then save in Flash/EEPROM
     char cmd = NULL;
     uint8_t ringId, rawHeat, rawLoad, rawRpm;

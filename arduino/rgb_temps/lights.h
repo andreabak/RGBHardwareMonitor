@@ -10,11 +10,8 @@
 #define DEFAULT_STRIP_TYPE  NEO_GRB + NEO_KHZ800
 
 #define RING_BASE_COLOR         0.0,   0.0,   0.0
-#define RING_COOL_COLOR         0.0,  95.0, 127.0
 #define RING_HOT_COLOR        191.0,   0.0,   0.0
-#define RINGFLAME_IDLE_COLOR  255.0, 255.0, 255.0
-#define RINGFLAME_COOL_COLOR    0.0,   0.0, 255.0
-#define RINGFLAME_HOT_COLOR   255.0, 191.0,   0.0
+#define RINGFLAME_HOT_COLOR   255.0, 159.0,   0.0
 #define SETTING_SMOOTHING        64
 #define INITIAL_VALUES          0.5
 
@@ -89,6 +86,7 @@ class RingLights {
     private:
         uint16_t stripPin, numLEDs;
         Adafruit_NeoPixel* strip;
+        uint16_t period = 5;
 
         // Update Context
         float invSmooth = 1.0 / SETTING_SMOOTHING;
@@ -98,25 +96,27 @@ class RingLights {
         float rotation = 0.0;
         float entropy = 0.0;
         float fade = 0.0;
-        float idleMix = 0.0;
-        const uint8_t idleSlowdown = 4;
         float fpsAvg = 30.0;
 
-        void mixFlame(Color& outColor, float flameForce, float heat, float dim=1.0);
+        void mixFlame(Color& outColor, Color& idleColor, float flameForce, float heat, float dim=1.0);
+        Color makeIdle(float pos, float offset=0.0);
         void mixIdle(Color& outColor, float pos, float offset, float mixStrength);
+        void mixDim(Color& outColor, float pos, float offset, float mixStrength);
+        void updateIdle();
         void updateContext();
 
     public:
         Color* ringPixels;
+        float rotationBaseSpeed = 8.0;
         float ringOffset = 0.0;
         Color ringBaseColor = Color(RING_BASE_COLOR);
-        Color ringCoolColor = Color(RING_COOL_COLOR);
         Color ringHotColor  = Color(RING_HOT_COLOR);
         float* ringFlameForce;
-        Color ringFlameIdleColor = Color(RINGFLAME_IDLE_COLOR);
-        Color ringFlameCoolColor = Color(RINGFLAME_COOL_COLOR);
         Color ringFlameHotColor  = Color(RINGFLAME_HOT_COLOR);
         float ringBrightness = 1.0;
+        float idleBrightness = 0.667;
+        bool idleDynamic = true;
+        uint8_t dimSpeedup = 4;
 
         uint16_t settingSmoothing = SETTING_SMOOTHING;
         float settingHeat = INITIAL_VALUES, settingLoad = INITIAL_VALUES, settingRpm = INITIAL_VALUES;
