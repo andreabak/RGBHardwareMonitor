@@ -67,7 +67,7 @@ def parse_args():
     return argparser.parse_args()
 
 
-# TODO: More systray features: edit config edit colors (autosave config)
+# TODO: More systray features: edit colors / runtime params (autosave config), open log?
 # TODO: Runtime colors set from python to arduino (maybe even persist on flash/eeprom)?
 def real_main():
     quit_event.clear()

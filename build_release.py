@@ -251,8 +251,10 @@ zip_dir(portable_release_path, build_dist_path)
 # TODO: Uninstall / cleanup before install
 # TODO: Keep configs and user-added files
 # TODO: Move config and arduino sketches somewhere else?
-# TODO: Add OpenHardwareMonitor download and setup option (or inside code?)
-# TODO: Remove autorun before uninstall
+# TODO: Add OpenHardwareMonitor download and unpack (inside code folder)
+#       + automatically set OHM path in config and close_ohm_on_exit
+#       + check licensing
+# TODO: Remove autorun before uninstall (only if not upgrading)
 logger.info('Compiling setup_script file')
 setup_script_template = TemplateFile(SETUP_SCRIPT_TEMPLATE_PATH)
 setup_script_install_instructions = generate_setup_files_instructions(build_dist_path)
