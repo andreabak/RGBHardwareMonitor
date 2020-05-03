@@ -9,7 +9,7 @@ from .log import logger
 from .runtime import run_as_admin
 
 
-openhardwaremonitor_exe_path = None
+openhardwaremonitor_exe_path: Optional[str] = None
 
 
 def _wmi_get_ohm():
@@ -22,7 +22,6 @@ def is_openhardwaremonitor_running():
 
 
 def openhardwaremonitor_start():
-    global openhardwaremonitor_exe_path
     if openhardwaremonitor_exe_path is None:
         raise ValueError('Cannot run OpenHardwareMonitor: executable path not specified')
     run_dir = Path(openhardwaremonitor_exe_path).parent
@@ -211,9 +210,8 @@ class SystemInfo:
         if not is_openhardwaremonitor_running():
             if not start_ohm:
                 raise RuntimeError('Failed while querying OpenHardwareMonitor WMI namespace. OHM not running?')
-            else:
-                openhardwaremonitor_start()
-                wmi_ohm = _wmi_get_ohm()
+            openhardwaremonitor_start()
+            wmi_ohm = _wmi_get_ohm()
         self.name = WMI().Win32_ComputerSystem()[0].Name
         self.os_name = WMI().Win32_OperatingSystem()[0].Caption
         self.os_architecture = WMI().Win32_OperatingSystem()[0].OSArchitecture

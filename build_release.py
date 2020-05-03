@@ -82,7 +82,6 @@ class TemplateFile:
 
 
 def copy_asset(src, dest=None):
-    global build_dist_path
     if dest is None:
         dest = src
     dest = os.path.join(build_dist_path, dest)

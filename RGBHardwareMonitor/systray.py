@@ -1,3 +1,4 @@
+import os
 import time
 import traceback
 from threading import Thread, Event
@@ -92,9 +93,9 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wr
         menu_options = menu_options or []
         menu_options += [
             MenuOption('Edit config',
-                       callback=lambda t: subprocess_run(['start', '', runtime.config_path], shell=True)),
+                       callback=lambda t: os.startfile(runtime.config_path)),
             CheckBoxMenuOption('Pause (and disconnect)',
-                               check_hook=lambda: pause_event.is_set(),
+                               check_hook=pause_event.is_set,
                                callback=lambda t: pause_event.clear() if pause_event.is_set() else pause_event.set()),
             CheckBoxMenuOption('Run at startup',
                                check_hook=lambda: autorun.is_enabled,

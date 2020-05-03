@@ -69,6 +69,7 @@ class RingLightSpec:
         return command
 
 
+# TODO: Refactor module into classes, maybe rename it too
 rings: List[RingLightSpec] = []
 ser: Optional[serial.Serial] = None
 serial_timeout = 3
