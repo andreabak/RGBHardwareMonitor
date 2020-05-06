@@ -92,6 +92,14 @@ def setup_serial():
     sleep(4)  # Wait for arduino reset on serial connection
 
 
+def close_serial():
+    global ser
+
+    if ser is not None:
+        ser.close()
+    ser = None
+
+
 def read_serial(until=serial.LF):
     if until is None:
         buffer = ser.read_all()
@@ -134,4 +142,4 @@ def update_loop(systray=None):
         except KeyboardInterrupt:
             logger.debug("Exit!")
         finally:
-            ser.close()
+            close_serial()
