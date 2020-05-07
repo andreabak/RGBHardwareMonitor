@@ -1,6 +1,8 @@
 import os
 import time
 import traceback
+import atexit
+from tempfile import NamedTemporaryFile
 from threading import Thread, Event
 
 # TODO: Replace import with installable library once done?
@@ -9,7 +11,8 @@ from modules.systray.src.systray import SysTrayIcon, CheckBoxMenuOption, MenuOpt
 from . import autorun
 from . import runtime
 from .log import logger, error_popup
-from .runtime import quit_event, pause_event, app_path, subprocess_run
+from .runtime import quit_event, pause_event, app_path
+from .hardware_monitor import SystemInfo
 
 
 class IconAnimation:
@@ -83,6 +86,15 @@ def systray_error_handler(exc):
     error_popup(traceback.format_exc())
 
 
+def display_hardware_info():
+    info = SystemInfo().formatted_info()
+    with NamedTemporaryFile(mode='w', encoding='utf8', prefix='hardware_info_', suffix='.txt', delete=False) as tempfp:
+        tempfp.write(info)
+        file_name = tempfp.name
+    os.startfile(file_name)
+    atexit.register(lambda fn: os.remove(fn), file_name)
+
+
 class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wrap and expose context manager
     default_animation = RunningIconAnimation
 
@@ -94,6 +106,8 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wr
         menu_options += [
             MenuOption('Edit config',
                        callback=lambda t: os.startfile(runtime.config_path)),
+            MenuOption('Show hardware info',
+                       callback=lambda t: display_hardware_info()),
             CheckBoxMenuOption('Pause (and disconnect)',
                                check_hook=pause_event.is_set,
                                callback=lambda t: pause_event.clear() if pause_event.is_set() else pause_event.set()),

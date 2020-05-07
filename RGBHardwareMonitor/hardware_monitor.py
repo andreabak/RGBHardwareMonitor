@@ -161,7 +161,8 @@ class Device:
             info_str += f'\t* Parent: {self.parent}\n'
         if self.sensors:
             info_str += '\t* Sensors:\n' \
-                        '\t------------\n' \
+                        '\t-------------\n' \
+                        f'\t\t  {"name":22}\t{"identifier":27}\t{"sensor_type":11}\t{"value"}\n' \
                       + '\n'.join(f'\t\t- {sens.name:22}\t{sens.identifier:27}\t{sens.sensor_type:11}\t{sens.value:.2f}'
                                   for sens in self.sensors)
         info_str += '\n'
@@ -243,20 +244,27 @@ class SystemInfo:
 
         return device_list
 
-    def print_devices(self):
-        """Function for print devices info"""
+    def formatted_devices(self):
+        info_strs = []
         for device_list in (self.mainboard, self.superio, self.cpu, self.ram, self.gpu, self.hdd):
             if isinstance(device_list, list):
                 for device in device_list:
-                    logger.info(device.get_info())
+                    info_strs.append(device.get_info())
             else:
-                logger.info(device_list.get_info())
+                info_strs.append(device_list.get_info())
+        return ''.join(info_strs)
+
+    def formatted_info(self):
+        return f'{self.name}\n' \
+               f'---------------\n' \
+               f'OS: {self.os_name} {self.os_architecture}\n\n' \
+               + self.formatted_devices()
+
+    def print_devices(self):
+        logger.info(self.formatted_devices())
 
     def print_info(self):
-        logger.info(f'self.name\n'
-                    f'---------------\n'
-                    f'OS: {self.os_name} {self.os_architecture}')
-        self.print_devices()
+        logger.info(self.formatted_info())
 
 
 if __name__ == '__main__':
