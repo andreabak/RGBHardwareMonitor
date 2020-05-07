@@ -86,14 +86,15 @@ void RingLights::displayRing() {
                 mix.mixWith(ringPixels[srcPix1], pixOffset);
             }
         }
-        Color idleColor = Color(mix);
+        Color flameCoolColor = Color(mix);
+        flameCoolColor *= 2.0;
         // Apply idle brightness
         mix *= mixValues(idleBrightness, 1.0, load);
         // Apply hot color
         mix.mixWith(ringHotColor, heat);
         // Mix flame effect
         if (ringFlameForce[i])
-            mixFlame(mix, idleColor, ringFlameForce[i], heat, 1.0 - (0.5 * randFloat() * load*load));
+            mixFlame(mix, flameCoolColor, ringFlameForce[i], heat, 1.0 - (0.75 * randFloat() * load*load));
         // Dim based on rotation speed
         mixDim(mix, i, -ringOffset * dimSpeedup, 1.0*rpm);
         // Global brightness
