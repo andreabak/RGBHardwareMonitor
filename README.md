@@ -1,83 +1,106 @@
-<!-- TODO: Rewrite README -->
-
-# DISCLAIMER
-This project is currently a Work-in-Progress. Structure, specifications and code can radically change at any time.
-
-
 # RGBHardwareMonitor
 
-The _hardware_monitor_ module will allow you to get in Python information about your hardware, and work with it. The *rgb_serial.py* script allows you to build custom illumination systems based on Adafruit NeoPixels strips and Arduino. This script will get the GPU's temperature and load, and will send to the Arduino a lighting command based on the obtained values.
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/andreabak/RGBHardwareMonitor)
+![Platform](https://img.shields.io/badge/platform-windows-lightgray)
+![Python version](https://img.shields.io/badge/python-3.7-informational)
+![Requires.io](https://img.shields.io/requires/github/andreabak/RGBHardwareMonitor)
+![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/andreabak/rgbhardwaremonitor)
+![Code Climate maintainability](https://img.shields.io/codeclimate/maintainability/andreabak/RGBHardwareMonitor)
+![License](https://img.shields.io/github/license/andreabak/RGBHardwareMonitor)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)][donation url]
 
-**SystemInfo class:**
+_RGBHardwareMonitor_ is an utility that allows displaying RGB lights effects based on your computer hardware temperatures or other sensor data.
+It relies on _OpenHardwareMonitor_ to query sensors values or other hardware monitoring information, then sends this information to an _Arduino_ connected via USB, which in turn displays light effects on connected RGB led strips.
 
-**Attributes:**
+### DISCLAIMER
+This project is currently in alpha stage. Structure, specifications and code can radically change at any time.
 
-* **name** *string*
-* **os_name** *string*
-* **os_architecture** *string*
-* **mainboard** *Device*
-* **superio** *Device*
-* **cpu** *Device*
-* **ram** *Device* 
-* **hdd** *Device*
-* **gpu** *Device*
+## Prerequisites
 
-*Any device of the SystemInfo class can be a list of Device objects. e.g. If you have 2 HDDs*
+ - **[OpenHardwareMonitor](http://openhardwaremonitor.org/)**
+   Needs to be either extracted/installed to a permanent location or already running.
+ - **Arduino**
+   An Arduino UNO (or other compatible microcontroller with same or better specs) is needed to interface to the RGB led strips, using the included sketch
+ - **RGB light strips or fans**
+   Connected to the arduino
 
+## Installation
 
-**Device class:**
+Download the ![latest release](/releases/latest) from the |[release](/releases) section of this GitHub repo.
+Pre-built binary releases are available in both installable or portable versions.
 
-**Attributes:**
+Only Windows operating system is currently supported.
 
-* **name** *string*
-* **identifier** *string*
-* **hardware_type** *string*
-* **parent** *string*
-* **sensors** *list(Sensor)*
+## Configuration
 
+The configuration file _config.ini_ can be found in the program's folder (default _%ProgramFiles%\RGBHardwareMonitor_). These are the main variables that can be specified:
+ - `[RGBHardwareMonitor]` section:
+   - `openhardwaremonitor_path`: defines the executable path of OpenHardwareMonitor, used to auto-start OHW if it's not running already
+   - `arduino_serial_id`: defines the USB serial ID of the arduino (_VID:PID_), used to identify the serial port for the arduino connection
+   - `log_file`: specifies a log file for debugging/logging purposes
+   - `log_level`: specifies the verbosity level for the logging output (accepted values: `CRITICAL`, `ERROR`, `WARNING`, `INFO`, `DEBUG`)
+   - `verbosity`: specifies the verbosity level for console output (this option has no effect when using the pre-built binaries as the terminal window is hidden by default)
+ - `[RingLight#]` section(s):
+   These section(s) define the various _RingLights_ effects, currently the only supported. Multiple RingLights are supported by the arduino code, and can be specified using an unique index for each (eg. `[RingLight1`, `[RingLight2]`, ...). They should conceptually identify a single hardware component for which to display temperature, load and fan speed.
+   - `name`: a human-readable name for the related hardware component (eg. `CPU` or `GPU`)
+ - `[RingLight#.{Type}Sensor]` subsections:
+   These "subsections" are used to specify the sensors data source and value ranges for _temperature_, _load_, and _fan_ for the _RingLight_ (respectively: `[RingLight#.TempSensor]`, `[RingLight#.LoadSensor]`, `[RingLight#.FanSensor]`)
+   - `device`: the device (from OpenHardwareMonitor) providing the sensors (accepted values: `mainboard`, `superio`, `cpu`, `ram`, `hdd`, `gpu`)
+   - `filter_{type}`: one or more filters are used to select the correct sensor for the device from OpenHardwareMonitor. The available filters are `filter_name`, `filter_identifier`, `filter_sensor_type`. The available values for the filters can be obtained by right-clicking the tray icon and selecting "Show hardware info".
+   - `range_min` and `range_max`: the "raw" values from the sensor that will be mapped to min (=0) and max (=100). Can be used to trigger some light effects only above certain thresholds (eg. temperature, cool at `range_min: 30.0`, hot at `range_max: 70.0`)
+   
+The default config file included should be edited to accomodate your custom setup before running the program for the first time.
 
-**Sensor class:**
+## Arduino setup
 
-**Attributes:**
+The arduino code can be found in the arduino/rgb_temps folder inside the program folder.
 
-* **name** *string*
-* **identifier** *string*
-* **sensor_type** *string*
-* **parent** *string*
-* **index** *int*
+## Usage
 
-**Properties:**
+Just run from the start menu (install version) or RGBHardwareMonitor.exe from the program folder (portable version).
 
-* **value** *float*
-* **min** *float*
-* **max** *float*
+The program runs from the taskbar tray and right-clicking the icon displays a menu with options.
 
+## Contributing
 
-## Requeriments
-* [OpenHardwareMonitor](http://openhardwaremonitor.org/) running
-* Python (*>=3.7*)
-* Pyserial (*>=3.0*)
-* WMI python module (*>=1.4*)
-* Pywin32 (*>=220*)
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
+<!--Please make sure to update tests as appropriate.-->
 
-## Custom Illumination System
+This repo uses a submodule for the systray library from ![here](https://github.com/andreabak/systray). Clone with:
+```bash
+git clone https://github.com/andreabak/RGBHardwareMonitor
+cd RGBHardwareMonitor
+git submodule init
+git submodule update
+```
 
-The script will search for the Arduino port automatic, for that, you must change the *VID:PID* value for the value of your Arduino. 
+### Requirements / dependecies
+ - [OpenHardwareMonitor](http://openhardwaremonitor.org/)
+ - Python (_>=3.7_)
+ - WMI (_>=1,<2_)
+ - pySerial (_>=3,<4_)
+ - PyWin32 (_>=220_)
+ - PyInstaller (_>=3,<4_): used for binaries and releases building
 
-The Arduino's code:
-* Use serial communication with the Python script
-* Use a little protocol based on integers.
-* Implemented effects:
-  - *RingLights*: shows a rotating/flashing ring displaying temperature, load and fan speed;
-  - ... more to come (feel free to send pull requests). 
+### Building
 
+Use the included build_release.py to build binary releases.
 
-## Issues
+## Acknowledgments
 
-* Open Hardware Monitor information is sometimes not descriptive of the sensor they represent.
-
+This project was originally born from a fork of <https://github.com/AndresCidoncha/VisualHardwareAlarm>, and then almost completely rewritten.
 
 ## Licence
 
-Released under GNUv3 License.
+Released under ![GPL-3.0 License](blob/master/LICENSE).
+
+## Donations
+
+Donate to the project maintainer:
+
+[![donate with PayPal](https://gist.githubusercontent.com/andreabak/bb1d67a7ffce6ffa830f052361ea0765/raw/f553450f3282bb4fa95dabb4da936e415c270aaa/paypal-donate-button.svg)][donation url]
+
+<!--REFERENCES-->
+
+[donation url]: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=PCYKW7DB34WQ4&item_name=donate+to+RGBHardwareMonitor+project+maintainer&currency_code=EUR&source=url
