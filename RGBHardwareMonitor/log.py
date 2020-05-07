@@ -26,5 +26,9 @@ def setup_file_logging(file_path, log_level):
     logger.addHandler(log_file_handler)
 
 
-def error_popup(msg, title='Error'):
-    return ctypes.windll.user32.MessageBoxW(0, msg, title, win32con.MB_ICONERROR)
+def message_popup(msg, title, type=win32con.MB_OK):
+    return ctypes.windll.user32.MessageBoxW(0, msg, title, type)
+
+
+def error_popup(msg, title='Error', type=win32con.MB_ICONERROR):
+    return message_popup(msg, title, type)
