@@ -59,7 +59,7 @@ The default config file included should be edited to accomodate your custom setu
 
 ## Arduino setup
 
-The arduino code can be found in the arduino/rgb_temps folder inside the program folder.
+The arduino code can be found in the `arduino/rgb_temps` folder inside the program folder.
 
 ## Usage
 
