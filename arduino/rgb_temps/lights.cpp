@@ -96,7 +96,7 @@ void RingLights::displayRing() {
         if (ringFlameForce[i])
             mixFlame(mix, flameCoolColor, ringFlameForce[i], heat, 1.0 - (0.75 * randFloat() * load*load));
         // Dim based on rotation speed
-        mixDim(mix, i, -ringOffset * dimSpeedup, 1.0*rpm);
+        mixDim(mix, i, ringOffset * dimSpeedup, 1.0*rpm);
         // Global brightness
         if (ringBrightness != 1.0)
             mix *= ringBrightness;
