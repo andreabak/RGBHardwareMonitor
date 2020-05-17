@@ -63,7 +63,9 @@ void parseCommand(char* cmdBuffer) {  // TODO: Implement commands to set custom 
         if (!cmdPartNum)
             cmd = cmdPart[0];
         else {
-            if (cmd == 'U') {
+            if (cmd == 'H') {
+                // Does not accept args for now
+            } else if (cmd == 'U') {
                 int val = atoi(cmdPart);
                 switch (cmdPartNum) {
                     case 1: ringId = val; break;
@@ -73,19 +75,34 @@ void parseCommand(char* cmdBuffer) {  // TODO: Implement commands to set custom 
                 }
             } else {
                 DEBUG_PRINT("Invalid command: %c", cmd);
-                break;
+                return;  // Stop parsing
             }
         }
         cmdPart = strtok(NULL, CMD_DELIMITERS);
         cmdPartNum++;
     }
-    if (!cmdPartNum)
+    if (!cmdPartNum) {
         DEBUG_PRINT("Received empty input");
+        return;  // Stop parsing
+    }
 
-    if (cmd == 'U') {
-        if (cmdPartNum != 5) {
-            DEBUG_PRINT("Invalid arguments length for command %c (given %d, expected %d)", cmd, cmdPartNum - 1, 4);
-        } else if (!ringId || ringId > ringsCount) {
+    auto check_args_num = [cmd, cmdPartNum](uint8_t expectedNumArgs) -> bool {
+        if ((cmdPartNum - 1) != expectedNumArgs) {
+            DEBUG_PRINT("Invalid arguments length for command %c (given %d, expected %d)",
+                        cmd, cmdPartNum - 1, expectedNumArgs);
+            return false;
+        }
+        return true;
+    };
+
+    if (cmd == 'H') {
+        if (!check_args_num(0))
+            return;
+        Serial.println("EHLO RGBHardwareMonitor");
+    } else if (cmd == 'U') {
+        if (!check_args_num(4))
+            return;
+        if (!ringId || ringId > ringsCount) {
             DEBUG_PRINT("Invalid ring id: %d", ringId);
         } else {
             float inHeat = max(0.0, min(1.0, (rawHeat / 255.0)));

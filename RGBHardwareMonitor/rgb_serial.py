@@ -1,6 +1,6 @@
 from time import sleep
 from dataclasses import dataclass
-from typing import Mapping, ClassVar, List, Optional
+from typing import Mapping, ClassVar, List, Optional, Union
 
 import serial
 from serial import SerialException
@@ -75,23 +75,6 @@ ser: Optional[serial.Serial] = None
 serial_timeout = 3
 
 
-def setup_serial():
-    global ser, serial_timeout
-
-    arduino_list = serial.tools.list_ports.grep(arduino_id)
-    for device in arduino_list:
-        arduino_port = device.device
-        break
-    else:
-        raise ConnectionError(f'Arduino serial port not found for specified VID:CID = {arduino_id}')
-
-    if ser:
-        ser.close()
-    ser = serial.Serial(arduino_port, 115200, timeout=serial_timeout)
-    logger.debug('Connected to serial port, waiting for arduino to reset')
-    sleep(4)  # Wait for arduino reset on serial connection
-
-
 def close_serial():
     global ser
 
@@ -105,7 +88,7 @@ def read_serial(until=serial.LF):
         buffer = ser.read_all()
     else:
         buffer = ser.read_until(terminator=until)
-    return buffer.decode().strip()
+    return buffer.decode(errors='replace').strip()
 
 
 def log_serial(*args, **kwargs):
@@ -118,6 +101,43 @@ def flush_serial():
     if ser.in_waiting:
         log_serial(until=None)
     ser.flush()
+
+
+def command_and_response(command: Union[str, bytes], ensure_line_end=True, flush=True):
+    if isinstance(command, str):
+        command = command.encode('utf8')
+    if ensure_line_end and command[-1] != b'\n':
+        command += b'\n'
+    ser.write(command)
+    sleep(0.25)  # Wait for data
+    response = read_serial()
+    if flush:
+        sleep(0.25)  # Wait for data
+        flush_serial()
+    return response
+
+
+def setup_serial():
+    def attempt_serial_handshake(arduino_port):
+        global ser, serial_timeout
+        close_serial()
+        ser = serial.Serial(arduino_port, 115200, timeout=serial_timeout)
+        logger.debug(f'Connected to serial port {ser.name}, waiting for arduino to reset')
+        sleep(4)  # Wait for arduino reset on serial connection
+        logger.debug('Attempting handshake')
+        response = command_and_response('H')
+        return response == 'EHLO RGBHardwareMonitor'
+
+    arduino_list = serial.tools.list_ports.grep(arduino_id)
+    for device in arduino_list:
+        if attempt_serial_handshake(device.device):
+            logger.debug('Succesfully connected to arduino')
+            break
+        else:
+            logger.debug('Handshake failed')
+    else:
+        close_serial()
+        raise ConnectionError(f'No arduino recognized for serial ports with specified VID:PID = {arduino_id}')
 
 
 def update_loop(systray=None):
@@ -133,10 +153,8 @@ def update_loop(systray=None):
                     if quit_event.is_set() or pause_event.is_set():
                         return
                     command = ring.prepare_command()
-                    ser.write(command.encode('UTF-8'))
-                    sleep(0.2)  # Wait for reply
-                    flush_serial()
-                    sleep(0.8)
+                    command_and_response(command)
+                    sleep(1)
         except SerialException as exc:
             logger.warning(f'Serial exception: {str(exc)}', exc_info=True)
         except KeyboardInterrupt:
