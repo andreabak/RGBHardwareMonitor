@@ -15,6 +15,13 @@ It relies on **OpenHardwareMonitor** to query sensors values or other hardware m
 ## DISCLAIMER
 This project is currently in alpha stage. Structure, specifications and code can radically change at any time.
 
+## Demo
+This is how the effects look on my RGB fans (CPU/GPU running at 10-20% load):
+
+<a href="url"><img src="demo/200mm.2.gif" align="center" height="135" width="135" ></a>
+<a href="url"><img src="demo/cpu.2.gif" align="center" height="135" width="135" ></a>
+<a href="url"><img src="demo/ring.2.gif" align="center" height="135" width="135" ></a>
+
 ## Prerequisites
 
 
@@ -29,7 +36,7 @@ This project is currently in alpha stage. Structure, specifications and code can
 
 ## Installation
 
-Download the ![latest release](/releases/latest) from the |[release](/releases) section of this GitHub repo.
+Download the ![latest release](/releases/latest) from the [release](/releases) section of this GitHub repo.
 Pre-built binary releases are available in both installable or portable versions.
 
 Only Windows operating system is currently supported.
