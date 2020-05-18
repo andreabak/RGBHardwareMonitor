@@ -1,6 +1,6 @@
 # RGBHardwareMonitor
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/andreabak/RGBHardwareMonitor)
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/andreabak/RGBHardwareMonitor?include_prereleases)
 ![Platform](https://img.shields.io/badge/platform-windows-lightgray)
 ![Python version](https://img.shields.io/badge/python-3.7-informational)
 ![Requires.io](https://img.shields.io/requires/github/andreabak/RGBHardwareMonitor)
@@ -36,7 +36,7 @@ This is how the effects look on my RGB fans (CPU/GPU running at 10-20% load):
 
 ## Installation
 
-Download the ![latest release](/releases/latest) from the [release](/releases) section of this GitHub repo.
+Download the latest releasefrom the [release][releases url] section of this GitHub repo.
 Pre-built binary releases are available in both installable or portable versions.
 
 Only Windows operating system is currently supported.
@@ -116,4 +116,5 @@ Donate to the project maintainer:
 
 <!--REFERENCES-->
 
+[releases url]: https://github.com/andreabak/RGBHardwareMonitor/releases
 [donation url]: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=PCYKW7DB34WQ4&item_name=donate+to+RGBHardwareMonitor+project+maintainer&currency_code=EUR&source=url
