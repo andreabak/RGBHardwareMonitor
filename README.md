@@ -16,9 +16,9 @@ It relies on **OpenHardwareMonitor** to query sensors values or other hardware m
 This project is currently in alpha stage. Structure, specifications and code can radically change at any time.
 
 ## Demo
-This is how the effects look on my RGB fans (CPU/GPU running at 10-20% load):
+This is how the effects look on my RGB fans:
 
-<a href="url"><img src="demo/200mm.2.gif" align="center" height="135" width="135" ></a>
+<a href="url"><img src="demo/200mm.3.cool2hot.final.gif" align="center" height="135" width="135" ></a>
 <a href="url"><img src="demo/cpu.2.gif" align="center" height="135" width="135" ></a>
 <a href="url"><img src="demo/ring.2.gif" align="center" height="135" width="135" ></a>
 
