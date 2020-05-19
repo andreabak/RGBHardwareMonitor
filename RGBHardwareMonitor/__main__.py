@@ -103,7 +103,7 @@ def real_main():
     rgb_serial.arduino_id = runtime.config['RGBHardwareMonitor']['arduino_serial_id']
 
     with RGBHardwareMonitorSysTray(animation_cls=WaitIconAnimation, start_animation=True) as systray:
-        rgb_serial.rings = ring_lights_from_cfg(runtime.config)
+        rgb_serial.rings = ring_lights_from_cfg(runtime.config)  # TODO: Handle sensor doesn't exist exception
         while not quit_event.is_set():
             if not pause_event.is_set():
                 rgb_serial.update_loop(systray=systray)

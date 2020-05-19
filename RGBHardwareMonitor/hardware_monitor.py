@@ -12,6 +12,9 @@ from .runtime import run_as_admin
 openhardwaremonitor_exe_path: Optional[str] = None
 
 
+# TODO: Catch WMI errors (like disconnection), check wmi lib
+
+
 def _wmi_get_ohm():
     """Returns OpenHardwareMonitor's WMI object"""
     return WMI(namespace=r"root\OpenHardwareMonitor")
