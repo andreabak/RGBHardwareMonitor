@@ -12,6 +12,30 @@ from .runtime import run_as_admin
 openhardwaremonitor_exe_path: Optional[str] = None
 
 
+class HardwareMonitorError(Exception):
+    """Base class for hardware monitor exceptions"""
+
+
+class HMExecError(HardwareMonitorError):
+    """Exception class for process execution errors"""
+
+
+class HMWMIError(HardwareMonitorError):
+    """Exception class for WMI related errors"""
+
+
+class HMWMINamespaceError(HMWMIError):
+    """Exception class for WMI namespace not found errors"""
+
+
+class HMNoSensorsError(HardwareMonitorError):
+    """Exception class for no sensors returned from WMI query"""
+
+
+class HMSensorNotFound(HardwareMonitorError):
+    """Exception class for sensor not found from WMI query"""
+
+
 # TODO: Catch WMI errors (like disconnection), check wmi lib
 
 
@@ -26,7 +50,7 @@ def is_openhardwaremonitor_running():
 
 def openhardwaremonitor_start():
     if openhardwaremonitor_exe_path is None:
-        raise ValueError('Cannot run OpenHardwareMonitor: executable path not specified')
+        raise HMExecError('Cannot run OpenHardwareMonitor: executable path not specified')
     run_dir = Path(openhardwaremonitor_exe_path).parent
     logger.debug('Starting OpenHardwareMonitor...')
     run_as_admin(openhardwaremonitor_exe_path, run_dir=str(run_dir))
@@ -38,7 +62,7 @@ def openhardwaremonitor_start():
             break
         retry -= 1
     else:
-        raise RuntimeError('Failed starting OpenHardwareMonitor: WMI timed out')
+        raise HMWMIError('Failed starting OpenHardwareMonitor: WMI timed out')
 
 
 @dataclass
@@ -213,7 +237,7 @@ class SystemInfo:
         wmi_ohm = _wmi_get_ohm()
         if not is_openhardwaremonitor_running():
             if not start_ohm:
-                raise RuntimeError('Failed while querying OpenHardwareMonitor WMI namespace. OHM not running?')
+                raise HMWMINamespaceError('Failed while querying OpenHardwareMonitor WMI namespace. OHM not running?')
             openhardwaremonitor_start()
             wmi_ohm = _wmi_get_ohm()
         self.name = WMI().Win32_ComputerSystem()[0].Name

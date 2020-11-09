@@ -4,7 +4,9 @@ import argparse
 import configparser
 import traceback
 from time import sleep
+from typing import Optional
 
+from RGBHardwareMonitor.hardware_monitor import HMNoSensorsError
 from . import runtime
 from . import rgb_serial
 from . import hardware_monitor
@@ -103,7 +105,23 @@ def real_main():
     rgb_serial.arduino_id = runtime.config['RGBHardwareMonitor']['arduino_serial_id']
 
     with RGBHardwareMonitorSysTray(animation_cls=WaitIconAnimation, start_animation=True) as systray:
-        rgb_serial.rings = ring_lights_from_cfg(runtime.config)  # TODO: Handle sensor doesn't exist exception
+        init_exc: Optional[Exception] = None
+        for _ in range(3):
+            try:
+                rgb_serial.rings = ring_lights_from_cfg(runtime.config)
+            except HMNoSensorsError as exc:
+                init_exc = exc
+                sleeptime: float = 5.0
+                logger.debug(f'Got no sensors found error. OpenHardwareMonitor initializing? Retrying in {sleeptime}')
+                sleep(sleeptime)
+            except Exception as exc:
+                init_exc = exc
+                raise
+            else:
+                init_exc = None
+                break
+        else:
+            raise RuntimeError(f'Initialization failed: {init_exc}') from init_exc
         while not quit_event.is_set():
             if not pause_event.is_set():
                 rgb_serial.update_loop(systray=systray)

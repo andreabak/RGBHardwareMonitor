@@ -8,7 +8,7 @@ from serial.tools import list_ports
 
 from .log import logger
 from .runtime import quit_event, pause_event
-from .hardware_monitor import SystemInfo, Sensor
+from .hardware_monitor import SystemInfo, Sensor, HMNoSensorsError, HMSensorNotFound
 from .systray import WaitIconAnimation, RunningIconAnimation
 
 
@@ -32,7 +32,10 @@ class SensorSpec:
     def __post_init__(self):
         if self.__class__.system_info is None:
             self.__class__.system_info = SystemInfo(start_ohm=True)
-        for sensor in getattr(self.__class__.system_info, self.device).sensors:
+        sensors = getattr(self.__class__.system_info, self.device).sensors
+        if not sensors:
+            raise HMNoSensorsError('No sensors available from hardware monitor')
+        for sensor in sensors:
             for f_attr, f_val in self.filters.items():
                 if getattr(sensor, f_attr) != f_val:  # if any filter fails, break loop
                     break
@@ -40,7 +43,7 @@ class SensorSpec:
                 self.sensor = sensor
                 break
         else:
-            raise OSError(f'Sensor not found (device: {self.device}, filters: {str(self.filters)})')
+            raise HMSensorNotFound(f'Sensor not found (device: {self.device}, filters: {str(self.filters)})')
 
     @property
     def value(self):
