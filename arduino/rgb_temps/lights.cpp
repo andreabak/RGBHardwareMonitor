@@ -9,6 +9,11 @@ float mixValues(float firstValue, float secondValue, float strength) {
     return (1.0 - strength) * firstValue + strength * secondValue;
 }
 
+uint8_t applyGamma(float input) {
+    uint32_t index = min(GAMMA_TABLE_SIZE - 1, uint32_t((GAMMA_TABLE_SIZE - 1) * input / 255.0));
+    return pgm_read_byte(&_GammaTable[index]);
+}
+
 RingLights::RingLights(uint16_t _stripPin, uint16_t _numLEDs, neoPixelType stripType=DEFAULT_STRIP_TYPE) {
     stripPin = _stripPin;
     numLEDs = _numLEDs;
@@ -87,7 +92,7 @@ void RingLights::displayRing() {
             }
         }
         Color flameCoolColor = Color(mix);
-        flameCoolColor *= 2.0;
+        flameCoolColor *= 3.0;
         // Apply idle brightness
         mix *= mixValues(idleBrightness, 1.0, load);
         // Apply hot color
@@ -101,11 +106,11 @@ void RingLights::displayRing() {
         if (ringBrightness != 1.0)
             mix *= ringBrightness;
         // Value clipping
-        uint8_t r = max(0.0, min(255.0, mix.r));
-        uint8_t g = max(0.0, min(255.0, mix.g));
-        uint8_t b = max(0.0, min(255.0, mix.b));
+        uint8_t r = applyGamma(max(0.0, min(255.0, mix.r)));
+        uint8_t g = applyGamma(max(0.0, min(255.0, mix.g)));
+        uint8_t b = applyGamma(max(0.0, min(255.0, mix.b)));
         // Gamma and set
-        strip->setPixelColor(i, strip->gamma32(strip->Color(r, g, b)));
+        strip->setPixelColor(i, r, g, b);
     }
     strip->show();
 }
