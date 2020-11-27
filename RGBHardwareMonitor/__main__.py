@@ -6,7 +6,7 @@ import traceback
 from time import sleep
 from typing import Optional
 
-from RGBHardwareMonitor.hardware_monitor import HMNoSensorsError
+from RGBHardwareMonitor.hardware_monitor import HMNoSensorsError, HMSensorNotFound
 from . import runtime
 from . import rgb_serial
 from . import hardware_monitor
@@ -109,7 +109,7 @@ def real_main():
         for _ in range(3):
             try:
                 rgb_serial.rings = ring_lights_from_cfg(runtime.config)
-            except HMNoSensorsError as exc:
+            except (HMNoSensorsError, HMSensorNotFound) as exc:
                 init_exc = exc
                 sleeptime: float = 5.0
                 logger.debug(f'Got no sensors found error. OpenHardwareMonitor initializing? Retrying in {sleeptime}')
