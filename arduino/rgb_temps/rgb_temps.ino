@@ -25,7 +25,7 @@ RingLights* rings[ringsCount];
 
 void setupRings() {
     rings[0] = new RingLights(2, 16, DEFAULT_STRIP_TYPE);
-    rings[1] = new RingLights(4, 13, DEFAULT_STRIP_TYPE);
+    rings[1] = new RingLights(4, 20, DEFAULT_STRIP_TYPE);
 }
 
 

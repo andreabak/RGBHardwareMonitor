@@ -21,7 +21,7 @@ RingLights::RingLights(uint16_t _stripPin, uint16_t _numLEDs, neoPixelType strip
     ringFlameForce = new float[numLEDs];
     strip = new Adafruit_NeoPixel(numLEDs, stripPin, stripType);
     // TODO: Apply max 32 somewhere on the divisor so to obtain semi-fixed-length repeat
-    period = max(8, min(32, numLEDs)) / 2;
+//    period = max(8, min(32, numLEDs)) / 2;
     initRing();
 }
 
@@ -67,10 +67,13 @@ void RingLights::mixIdle(Color& outColor, float pos, float offset=0.0, float mix
 
 void RingLights::mixDim(Color& outColor, float pos, float offset=0.0, float mixStrength=1.0) {
 //    float baseDim = fabs(((fmod(pos + offset, period)) - (period / 2)) / float(period / 2));
-    float baseDim = (1.0 + cos(2.0 * PI * (pos + offset) / period)) / 2.0;
+    float baseDim = (1.0 + cos(2.0 * PI * (pos + offset) / (numLEDs / 2.0))) / 2.0;
+    baseDim *= 4;
     if (baseDim) {
-        baseDim *= (1.0 - 0.125 * randFloat());
-        outColor.mixWith(ringBaseColor, baseDim * mixStrength);
+//        baseDim *= (1.0 - 0.125 * randFloat());
+        mixStrength *= baseDim;
+        mixStrength = max(0.0, min(1.0, mixStrength));
+        outColor.mixWith(ringBaseColor, mixStrength);
     }
 }
 
@@ -124,15 +127,16 @@ void RingLights::updateContext() {
     invHeat = 1.0 - heat;
     invLoad = 1.0 - load;
     invRpm = 1.0 - rpm;
-    rotation = (rotationBaseSpeed / fpsAvg) * rpm*rpm;
+    rotation = (rotationBaseSpeed / fpsAvg) * 1.5*(rpm*rpm);
     entropy = 99000 * load*load;
     fade = 0.5 * (0.25 + 0.75 * heat) * (0.5 + 0.5 * load);
 
     ringOffset += rotation;
-    if (ringOffset >= numLEDs * period)
-        ringOffset -= numLEDs * period;
+    float wrapPeriod = numLEDs * period;
+    if (ringOffset >= wrapPeriod)
+        ringOffset -= wrapPeriod;
     else if (ringOffset < 0)
-        ringOffset += numLEDs * period;
+        ringOffset += wrapPeriod;
 }
 
 void RingLights::updateIdle() {

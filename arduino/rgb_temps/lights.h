@@ -124,7 +124,7 @@ class RingLights {
     private:
         uint16_t stripPin, numLEDs;
         Adafruit_NeoPixel* strip;
-        uint16_t period = 5;
+        uint16_t period = 8;
 
         // Update Context
         float invSmooth = 1.0 / SETTING_SMOOTHING;
@@ -145,7 +145,7 @@ class RingLights {
 
     public:
         Color* ringPixels;
-        float rotationBaseSpeed = 8.0;
+        float rotationBaseSpeed = 20.0;
         float ringOffset = 0.0;
         Color ringBaseColor = Color(RING_BASE_COLOR);
         Color ringHotColor  = Color(RING_HOT_COLOR);
@@ -154,7 +154,7 @@ class RingLights {
         float ringBrightness = 1.0;
         float idleBrightness = 0.5;
         bool idleDynamic = true;
-        uint8_t dimSpeedup = 4;
+        float dimSpeedup = 1.125;
 
         uint16_t settingSmoothing = SETTING_SMOOTHING;
         float settingHeat = INITIAL_VALUES, settingLoad = INITIAL_VALUES, settingRpm = INITIAL_VALUES;
