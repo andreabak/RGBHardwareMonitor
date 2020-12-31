@@ -106,7 +106,7 @@ def real_main():
 
     with RGBHardwareMonitorSysTray(animation_cls=WaitIconAnimation, start_animation=True) as systray:
         init_exc: Optional[Exception] = None
-        for _ in range(3):
+        for _ in range(12):
             try:
                 rgb_serial.rings = ring_lights_from_cfg(runtime.config)
             except (HMNoSensorsError, HMSensorNotFound) as exc:
