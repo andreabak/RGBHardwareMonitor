@@ -28,6 +28,10 @@ class HMWMINamespaceError(HMWMIError):
     """Exception class for WMI namespace not found errors"""
 
 
+class HMNoDeviceError(HardwareMonitorError):
+    """Exception class for no device returned from WMI query"""
+
+
 class HMNoSensorsError(HardwareMonitorError):
     """Exception class for no sensors returned from WMI query"""
 
@@ -54,9 +58,9 @@ def openhardwaremonitor_start():
     run_dir = Path(openhardwaremonitor_exe_path).parent
     logger.debug('Starting OpenHardwareMonitor...')
     run_as_admin(openhardwaremonitor_exe_path, run_dir=str(run_dir))
-    retry = 15
+    retry = 60
     while retry > 0:
-        time.sleep(2)
+        time.sleep(1)
         if is_openhardwaremonitor_running():
             logger.debug('OpenHardwareMonitor started')
             break
@@ -109,7 +113,10 @@ class Sensor:
     @property
     def wmi_sensor(self):
         """Get wrapped WMI Sensor"""
-        return _wmi_get_ohm().Sensor(Identifier=self.identifier)[0]
+        try:
+            return _wmi_get_ohm().Sensor(Identifier=self.identifier)[0]
+        except IndexError as exc:
+            raise HMSensorNotFound('Sensor not found') from exc
 
     @property
     def value(self):

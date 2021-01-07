@@ -4,16 +4,15 @@ import argparse
 import configparser
 import traceback
 from time import sleep
-from typing import Optional
 
-from RGBHardwareMonitor.hardware_monitor import HMNoSensorsError, HMSensorNotFound
 from . import runtime
 from . import rgb_serial
 from . import hardware_monitor
 from . import autorun
+from .hardware_monitor import HMNoSensorsError, HMSensorNotFound, HMExecError, HardwareMonitorError
 from .log import logger, log_stream_handler, setup_file_logging, error_popup
 from .runtime import quit_event, pause_event, is_admin
-from .systray import RGBHardwareMonitorSysTray, WaitIconAnimation, PausedIconStatic
+from .systray import RGBHardwareMonitorSysTray, WaitIconAnimation, PausedIconStatic, ErrorIconAnimation
 
 
 def sensor_spec_from_cfg(config, section_name, subsection_name):
@@ -105,29 +104,33 @@ def real_main():
     rgb_serial.arduino_id = runtime.config['RGBHardwareMonitor']['arduino_serial_id']
 
     with RGBHardwareMonitorSysTray(animation_cls=WaitIconAnimation, start_animation=True) as systray:
-        init_exc: Optional[Exception] = None
-        for _ in range(12):
-            try:
-                rgb_serial.rings = ring_lights_from_cfg(runtime.config)
-            except (HMNoSensorsError, HMSensorNotFound) as exc:
-                init_exc = exc
-                sleeptime: float = 5.0
-                logger.debug(f'Got no sensors found error. OpenHardwareMonitor initializing? Retrying in {sleeptime}')
-                sleep(sleeptime)
-            except Exception as exc:
-                init_exc = exc
-                raise
-            else:
-                init_exc = None
-                break
-        else:
-            raise RuntimeError(f'Initialization failed: {init_exc}') from init_exc
+        is_init: bool = True
         while not quit_event.is_set():
-            if not pause_event.is_set():
-                rgb_serial.update_loop(systray=systray)
-            else:
-                systray.set_animation(PausedIconStatic)
-                sleep(1)
+            try:
+                if is_init and not hardware_monitor.is_openhardwaremonitor_running():
+                    systray.set_hover_text('Starting OpenHardwareMonitor')
+                    systray.set_animation(WaitIconAnimation)
+                    hardware_monitor.openhardwaremonitor_start()
+                    rgb_serial.SensorSpec.system_info = None  # deinit cached OHM data
+                    sleep(10)  # Let OHM load sensors
+                rgb_serial.rings = ring_lights_from_cfg(runtime.config)
+                is_init = False
+                if not hardware_monitor.is_openhardwaremonitor_running():
+                    raise HMExecError('OHM not running')
+                while not quit_event.is_set():
+                    if not pause_event.is_set():
+                        rgb_serial.update_loop(systray=systray)
+                    else:
+                        systray.set_animation(PausedIconStatic)
+                        sleep(1)
+
+            except HardwareMonitorError as exc:
+                sensor_error: bool = isinstance(exc, (HMNoSensorsError, HMSensorNotFound))
+                sleeptime: float = 5.0
+                logger.debug(f'Got error: {str(exc)}.\nOpenHardwareMonitor running? Retrying in {sleeptime}')
+                systray.set_hover_text(f'ERROR: {str(exc)}' + ('. Is OpenHardwareMonitor running?' if sensor_error else ''))
+                systray.set_animation(ErrorIconAnimation)
+                sleep(sleeptime)
 
     return 0
 

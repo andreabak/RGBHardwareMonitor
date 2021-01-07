@@ -9,10 +9,10 @@ from threading import Thread, Event
 from modules.systray.src.systray import SysTrayIcon, CheckBoxMenuOption, MenuOption
 
 from . import autorun
+from . import hardware_monitor
 from . import runtime
-from .log import logger, error_popup
+from .log import logger, error_popup, message_popup
 from .runtime import quit_event, pause_event, app_path
-from .hardware_monitor import SystemInfo
 
 
 class IconAnimation:
@@ -73,6 +73,11 @@ class RunningIconAnimation(IconAnimation):
     icons = [app_path(f'resources/icon/icon.f{n}.ico') for n in range(6)]
 
 
+class ErrorIconAnimation(IconAnimation):
+    icons = [app_path(f'resources/icon_error/icon_error.f{n}.ico') for n in range(4)]
+    frames_interval = 0.15
+
+
 class WaitIconAnimation(IconAnimation):
     icons = [app_path(f'resources/icon_wait/icon_wait.f{n}.ico') for n in range(10)]
 
@@ -87,7 +92,7 @@ def systray_error_handler(exc):
 
 
 def display_hardware_info():
-    info = SystemInfo().formatted_info()
+    info = hardware_monitor.SystemInfo().formatted_info()
     with NamedTemporaryFile(mode='w', encoding='utf8', prefix='hardware_info_', suffix='.txt', delete=False) as tempfp:
         tempfp.write(info)
         file_name = tempfp.name
@@ -95,8 +100,21 @@ def display_hardware_info():
     atexit.register(lambda fn: os.remove(fn), file_name)
 
 
+def ensure_ohw_started():
+    if not hardware_monitor.is_openhardwaremonitor_running():
+        try:
+            hardware_monitor.openhardwaremonitor_start()
+        except (hardware_monitor.HMExecError, hardware_monitor.HMWMIError):
+            error_popup('Failed starting OpenHardwareMonitor!')
+        else:
+            message_popup('OpenHardwareMonitor started!', title=RGBHardwareMonitorSysTray.default_hover_text)
+    else:
+        message_popup('OpenHardwareMonitor is already running!', title=RGBHardwareMonitorSysTray.default_hover_text)
+
+
 class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wrap and expose context manager
     default_animation = RunningIconAnimation
+    default_hover_text = "RGBHardwareMonitor"
 
     def __init__(self, menu_options=None, on_quit=None, animation_cls=None, start_animation=False):
         if on_quit is None:
@@ -108,6 +126,8 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wr
                        callback=lambda t: os.startfile(runtime.config_path)),
             MenuOption('Show hardware info',
                        callback=lambda t: display_hardware_info()),
+            MenuOption('Start OpenHardwareMonitor',
+                       callback=lambda t: ensure_ohw_started()),
             CheckBoxMenuOption('Pause (and disconnect)',
                                check_hook=pause_event.is_set,
                                callback=lambda t: pause_event.clear() if pause_event.is_set() else pause_event.set()),
@@ -118,7 +138,7 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wr
 
         animation_cls = animation_cls if animation_cls else self.default_animation
 
-        super().__init__(animation_cls.icons[0], "RGBHardwareMonitor",
+        super().__init__(animation_cls.icons[0], self.default_hover_text,
                          menu_options=menu_options,
                          default_menu_index=0,
                          on_quit=on_quit,
@@ -142,6 +162,12 @@ class RGBHardwareMonitorSysTray(SysTrayIcon):  # TODO: Instead of inheriting, wr
 
     def animation_stop(self):
         self.animation.stop()
+
+    def set_hover_text(self, error_text):
+        self.update(hover_text=' - '.join((error_text, self.default_hover_text)))
+
+    def clear_hover_text(self):
+        self.update(hover_text=self.default_hover_text)
 
     def set_icon(self, icon):
         self.update(icon=icon)

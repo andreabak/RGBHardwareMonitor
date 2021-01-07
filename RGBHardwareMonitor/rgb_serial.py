@@ -8,7 +8,7 @@ from serial.tools import list_ports
 
 from .log import logger
 from .runtime import quit_event, pause_event
-from .hardware_monitor import SystemInfo, Sensor, HMNoSensorsError, HMSensorNotFound
+from .hardware_monitor import SystemInfo, Sensor, HMNoSensorsError, HMSensorNotFound, HMNoDeviceError
 from .systray import WaitIconAnimation, RunningIconAnimation
 
 
@@ -32,7 +32,10 @@ class SensorSpec:
     def __post_init__(self):
         if self.__class__.system_info is None:
             self.__class__.system_info = SystemInfo(start_ohm=True)
-        sensors = getattr(self.__class__.system_info, self.device).sensors
+        try:
+            sensors = getattr(self.__class__.system_info, self.device).sensors
+        except AttributeError:
+            raise HMNoDeviceError(f'Device not found: {self.device}')
         if not sensors:
             raise HMNoSensorsError('No sensors available from hardware monitor')
         for sensor in sensors:
@@ -146,10 +149,12 @@ def setup_serial():
 def update_loop(systray=None):
     while True:
         if systray is not None:
+            systray.set_hover_text('Connecting to serial')
             systray.set_animation(WaitIconAnimation, start_animation=True)
         try:
             setup_serial()
             if systray is not None:
+                systray.clear_hover_text()
                 systray.set_animation(RunningIconAnimation, start_animation=True)
             while True:
                 for ring in rings:
