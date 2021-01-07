@@ -67,9 +67,19 @@ void RingLights::mixIdle(Color& outColor, float pos, float offset=0.0, float mix
 
 void RingLights::mixDim(Color& outColor, float pos, float offset=0.0, float mixStrength=1.0) {
 //    float baseDim = fabs(((fmod(pos + offset, period)) - (period / 2)) / float(period / 2));
-    float baseDim = (1.0 + cos(2.0 * PI * (pos + offset) / (numLEDs / 2.0))) / 2.0;
-    baseDim *= 4;
+    const uint8_t repeats = 2;
+    float baseDim = (pos + offset) / (numLEDs / float(repeats));
+    baseDim -= int(baseDim);  // == FMOD 1.0
+    baseDim = 1.0 - baseDim; baseDim *= baseDim; baseDim = 1.0 - baseDim;
+//    baseDim = pow(baseDim, 0.33333333);
+    baseDim = (1.0 + sin(2.0 * PI * (baseDim + 0.25))) / 2.0;
+//    baseDim *= baseDim;
+//    baseDim = pow(baseDim, 1.5);
+//    baseDim = 1.0 - baseDim;
+//    float baseDim = (1.0 + cos(2.0 * PI * (pos + offset) / (numLEDs / 2.0))) / 2.0;
     if (baseDim) {
+//        baseDim *= 1.125;
+//        mixStrength = pow(mixStrength, 0.5);
 //        baseDim *= (1.0 - 0.125 * randFloat());
         mixStrength *= baseDim;
         mixStrength = max(0.0, min(1.0, mixStrength));
@@ -104,7 +114,7 @@ void RingLights::displayRing() {
         if (ringFlameForce[i])
             mixFlame(mix, flameCoolColor, ringFlameForce[i], heat, 1.0 - (0.75 * randFloat() * load*load));
         // Dim based on rotation speed
-        mixDim(mix, i, ringOffset * dimSpeedup, 1.0*rpm);
+        mixDim(mix, i, ringOffset * dimSpeedup, min(1.0, rpm*6.0));
         // Global brightness
         if (ringBrightness != 1.0)
             mix *= ringBrightness;
@@ -127,7 +137,7 @@ void RingLights::updateContext() {
     invHeat = 1.0 - heat;
     invLoad = 1.0 - load;
     invRpm = 1.0 - rpm;
-    rotation = (rotationBaseSpeed / fpsAvg) * 1.5*(rpm*rpm);
+    rotation = (rotationBaseSpeed / fpsAvg) * 1.5*(rpm*rpm*rpm);
     entropy = 99000 * load*load;
     fade = 0.5 * (0.25 + 0.75 * heat) * (0.5 + 0.5 * load);
 

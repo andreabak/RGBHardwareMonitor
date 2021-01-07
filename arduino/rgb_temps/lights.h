@@ -145,7 +145,7 @@ class RingLights {
 
     public:
         Color* ringPixels;
-        float rotationBaseSpeed = 20.0;
+        float rotationBaseSpeed = 24.0;
         float ringOffset = 0.0;
         Color ringBaseColor = Color(RING_BASE_COLOR);
         Color ringHotColor  = Color(RING_HOT_COLOR);
