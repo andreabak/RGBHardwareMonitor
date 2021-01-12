@@ -94,7 +94,7 @@ git submodule update
  - WMI (_>=1,<2_)
  - pySerial (_>=3,<4_)
  - PyWin32 (_>=220_)
- - PyInstaller (_>=3,<4_): used for binaries and releases building
+ - PyInstaller (_>=3,<5_): used for binaries and releases building
 
 ### Building
 

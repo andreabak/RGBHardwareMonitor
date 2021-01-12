@@ -3,4 +3,4 @@ WMI>=1,<2
 pySerial>=3,<4
 PyWin32>=220
 # infi.systray<1  # disabled as importing submodule
-PyInstaller>=3,<4
+PyInstaller>=3,<5
