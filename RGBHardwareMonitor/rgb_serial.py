@@ -93,7 +93,7 @@ def read_serial(until=serial.LF):
     if until is None:
         buffer = ser.read_all()
     else:
-        buffer = ser.read_until(terminator=until)
+        buffer = ser.read_until(until)
     return buffer.decode(errors='replace').strip()
 
 
